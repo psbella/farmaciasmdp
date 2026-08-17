@@ -704,23 +704,25 @@ main {
 }
 
 .badge-github {
+
   display: inline-flex;
+
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  background: var(--accent-dim);
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 600;
+
+  gap: 6px;
+
+  color: var(--muted);
+
   text-decoration: none;
-  transition: all 0.2s;
+
+  transition: color 0.2s;
+
 }
 
 .badge-github:hover {
-  background: rgba(63, 185, 80, 0.25);
-  transform: translateY(-1px);
-  text-decoration: none;
+
+  color: var(--accent);
+
 }
 
 /* ==================== RESPONSIVE ==================== */
