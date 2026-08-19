@@ -14,6 +14,22 @@ Todos los cambios notables de este proyecto se documentan acá. El formato sigue
 
 ## [Unreleased]
 
+## [2.9.0] - 2026-08-19
+
+### Added
+- `admin-map.html` guarda directo a GitHub vía la Contents API (`GET` para
+  obtener el `sha` actual, `PUT` con el JSON actualizado), en vez de bajar un
+  archivo local para subir a mano.
+- Estilo para `.btn-volver-app` en páginas legales (existía la clase desde
+  mayo, sin CSS asociado desde que se borró en `Delete styles for volver app
+  button`).
+
+### Changed
+- Token de GitHub classic pedido en runtime (guardado solo en
+  `sessionStorage`), reemplaza la contraseña hardcodeada en texto plano de
+  `admin-map.html` — esa contraseña no protegía nada real (`db.json` ya es
+  público), el token sí gatea la escritura real al repo.
+
 ### Fixed
 - `privacidad.html` no linkeaba `style.css` (tenía su propio `:root` duplicado
   y desactualizado, sin el tinte de paleta ni el split de `--accent`/`--muted`
@@ -21,11 +37,6 @@ Todos los cambios notables de este proyecto se documentan acá. El formato sigue
   hardcodeado tapaba por cascada el `var(--muted)` correcto.
 - `.badge-github` bajado de pill con fondo a link plano, consistente con el
   resto de la columna "Contacto" del footer.
-
-### Added
-- Estilo para `.btn-volver-app` en páginas legales (existía la clase desde
-  mayo, sin CSS asociado desde que se borró en `Delete styles for volver app
-  button`).
 
 ## [2.8.0] - 2026-08-18
 
