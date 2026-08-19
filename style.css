@@ -462,6 +462,25 @@ main {
   background: rgba(0, 0, 0, 0.85);
 }
 
+.btn-volver-app {
+  display: inline-block;
+  padding: 12px 28px;
+  border-radius: 40px;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Nunito', sans-serif;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+}
+
+.btn-volver-app:hover {
+  transform: translateY(-2px);
+  background: #2c974b;
+}
+
 .light .btn-volver {
   background: rgba(255, 255, 255, 0.9);
   color: #1f2328;
