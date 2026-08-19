@@ -32,11 +32,13 @@
 </head>
 <body>
 <script>
-  const PASSWORD = 'pasteldepapasconpasasdeuva';
-  const userInput = prompt('🔐 Contraseña de administrador:');
-  if (userInput !== PASSWORD) {
-    document.body.innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100vh;"><div style="text-align:center;"><h1>⛔ Acceso denegado</h1><p>Contraseña incorrecta.</p></div></div>';
-    throw new Error('Acceso denegado');
+  const GH_OWNER = 'psbella';
+  const GH_REPO = 'farmaciasmdp';
+  const GH_PATH = 'db.json';
+  let ghToken = sessionStorage.getItem('gh_token');
+  if (!ghToken) {
+    ghToken = prompt('🔑 Token de GitHub (classic, scope repo):');
+    if (ghToken) sessionStorage.setItem('gh_token', ghToken);
   }
 </script>
 
@@ -58,7 +60,7 @@
         <button id="btn-correcta">✅ Guardar y siguiente</button>
         <button id="btn-anterior">⏪ Anterior</button>
         <button id="btn-gmaps" class="btn-gmaps">📍 Buscar dirección</button>
-        <button id="btn-descargar" class="btn-descargar">💾 Descargar JSON</button>
+        <button id="btn-descargar" class="btn-descargar">💾 Guardar en GitHub</button>
       </div>
       <div id="estado" class="estado">📝 Editá los campos o arrastrá el pin</div>
     </div>
@@ -238,7 +240,7 @@
       mostrarFarmacia(currentIndex);
       actualizarProgreso();
     } else {
-      document.getElementById('estado').innerHTML = '🎉 Terminaste! Descargá el JSON.';
+      document.getElementById('estado').innerHTML = '🎉 Terminaste! Guardá los cambios en GitHub.';
     }
   }
 
@@ -251,7 +253,17 @@
     }
   }
 
-  async function descargarJSON() {
+  function utf8ToBase64(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+
+  async function guardarEnGitHub() {
+    if (!ghToken) {
+      ghToken = prompt('🔑 Token de GitHub (classic, scope repo):');
+      if (!ghToken) return;
+      sessionStorage.setItem('gh_token', ghToken);
+    }
+
     actualizarFarmaciaDesdeCampos();
     const res = await fetch('db.json');
     const dbOriginal = await res.json();
@@ -293,17 +305,44 @@
     });
     jsonStr += '}';
 
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'db.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    document.getElementById('estado').innerHTML = '✅ JSON descargado con coordenadas actualizadas.';
-    document.getElementById('estado').style.color = '#3fb950';
+    const estado = document.getElementById('estado');
+    estado.innerHTML = '⏳ Guardando en GitHub...';
+    estado.style.color = '#7d8590';
+
+    try {
+      const apiBase = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`;
+      const headers = {
+        'Authorization': `token ${ghToken}`,
+        'Accept': 'application/vnd.github+json'
+      };
+
+      const shaRes = await fetch(apiBase, { headers });
+      if (shaRes.status === 401) throw new Error('Token invalido o sin permisos.');
+      if (!shaRes.ok) throw new Error(`No se pudo leer db.json (${shaRes.status}).`);
+      const shaData = await shaRes.json();
+
+      const putRes = await fetch(apiBase, {
+        method: 'PUT',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: 'Actualizar db.json desde el editor de administracion',
+          content: utf8ToBase64(jsonStr),
+          sha: shaData.sha,
+          branch: 'main'
+        })
+      });
+
+      if (!putRes.ok) {
+        const err = await putRes.json().catch(() => ({}));
+        throw new Error(err.message || `Error al guardar (${putRes.status}).`);
+      }
+
+      estado.innerHTML = '✅ Guardado en GitHub. El deploy tarda un par de minutos.';
+      estado.style.color = '#3fb950';
+    } catch (e) {
+      estado.innerHTML = `❌ ${e.message}`;
+      estado.style.color = '#f85149';
+    }
   }
 
   function actualizarProgreso() {
@@ -314,7 +353,7 @@
   function bindEvents() {
     document.getElementById('btn-correcta').addEventListener('click', siguiente);
     document.getElementById('btn-anterior').addEventListener('click', anterior);
-    document.getElementById('btn-descargar').addEventListener('click', descargarJSON);
+    document.getElementById('btn-descargar').addEventListener('click', guardarEnGitHub);
     document.getElementById('btn-gmaps').addEventListener('click', buscarDireccionEnGoogle);
     
     document.getElementById('tab-leaflet').addEventListener('click', () => {
