@@ -162,7 +162,8 @@
   }
 
   async function buscarDireccionEnGoogle() {
-    const f = todasFarmacias[currentIndex];
+    const targetIndex = currentIndex;
+    const f = todasFarmacias[targetIndex];
     if (!f || !f.direccion) return;
     
     const queries = [
@@ -196,7 +197,7 @@
       
       if (window.markerGoogle) map.removeLayer(window.markerGoogle);
       window.markerGoogle = L.marker([googleLat, googleLng], { icon: iconoGoogle }).addTo(map);
-      window.markerGoogle.bindPopup(`<b>Resultado</b><br>${data[0].display_name}<br><small>¿Usar estas coordenadas?</small><br><button onclick="usarCoordenadasGoogle(${googleLat}, ${googleLng})" style="margin-top:4px; padding:4px 8px; background:#4285F4; color:white; border:none; border-radius:4px; cursor:pointer;">✅ Usar estas</button>`).openPopup();
+      window.markerGoogle.bindPopup(`<b>Resultado</b><br>${data[0].display_name}<br><small>¿Usar estas coordenadas?</small><br><button onclick="usarCoordenadasGoogle(${googleLat}, ${googleLng}, ${targetIndex})" style="margin-top:4px; padding:4px 8px; background:#4285F4; color:white; border:none; border-radius:4px; cursor:pointer;">✅ Usar estas</button>`).openPopup();
       
       document.getElementById('tab-leaflet').click();
       map.setView([googleLat, googleLng], 16);
@@ -208,13 +209,17 @@
     }
   }
 
-  function usarCoordenadasGoogle(lat, lng) {
-    document.getElementById('input-lat').value = lat.toFixed(6);
-    document.getElementById('input-lng').value = lng.toFixed(6);
-    actualizarFarmaciaDesdeCampos();
-    const f = todasFarmacias[currentIndex];
-    actualizarMapa(f);
-    document.getElementById('estado').innerHTML = '✅ Coordenadas aplicadas';
+  function usarCoordenadasGoogle(lat, lng, targetIndex) {
+    const f = todasFarmacias[targetIndex];
+    if (!f) return;
+    f.lat = lat;
+    f.lng = lng;
+    if (targetIndex === currentIndex) {
+      document.getElementById('input-lat').value = lat.toFixed(6);
+      document.getElementById('input-lng').value = lng.toFixed(6);
+      actualizarMapa(f);
+    }
+    document.getElementById('estado').innerHTML = `✅ Coordenadas aplicadas a ${f.nombre}`;
     document.getElementById('estado').style.color = '#3fb950';
   }
 
@@ -295,7 +300,13 @@
       ciclosData[grupo].forEach((f, i) => {
         const lat = f.lat != null ? f.lat : null;
         const lng = f.lng != null ? f.lng : null;
-        jsonStr += `    { "nombre": "${f.nombre.replace(/"/g, '\\"')}", "direccion": "${f.direccion.replace(/"/g, '\\"')}", "telefono": "${f.telefono}", "lat": ${lat}, "lng": ${lng} }`;
+        jsonStr += `    {\n`;
+        jsonStr += `      "nombre": "${f.nombre.replace(/"/g, '\\"')}",\n`;
+        jsonStr += `      "direccion": "${f.direccion.replace(/"/g, '\\"')}",\n`;
+        jsonStr += `      "telefono": "${f.telefono}",\n`;
+        jsonStr += `      "lat": ${lat},\n`;
+        jsonStr += `      "lng": ${lng}\n`;
+        jsonStr += `    }`;
         if (i < ciclosData[grupo].length - 1) jsonStr += ',';
         jsonStr += '\n';
       });
