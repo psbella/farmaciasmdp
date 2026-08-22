@@ -47,11 +47,11 @@
   <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
   <div class="grid">
     <div class="panel">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; position: relative;">
     <h2 id="farm-nombre" style="margin: 0;">Cargando... <span class="badge" id="contador">0/0</span></h2>
-    <button id="btn-lista" style="background: #30363d; color: #e6edf3; border: 1px solid #30363d; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">📋 Ver lista</button>
+    <button id="btn-lista" style="background: #30363d; color: #e6edf3; border: 1px solid #30363d; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">📋 Ver lista ▾</button>
+    <div id="panel-lista" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 6px; width: 320px; max-width: calc(100vw - 40px); max-height: 320px; overflow-y: auto; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 20;"></div>
 </div>
-<div id="panel-lista" style="display: none; max-height: 300px; overflow-y: auto; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 8px; margin-bottom: 12px;"></div>
       <div class="campo"><label>🏷️ Nombre</label><input type="text" id="input-nombre"></div>
       <div class="campo"><label>📍 Dirección</label><textarea id="input-direccion" rows="2"></textarea></div>
       <div class="campo"><label>📞 Teléfono</label><input type="text" id="input-telefono"></div>
@@ -398,20 +398,35 @@
     });
   }
 
-  cargarFarmacias();
-  document.getElementById('btn-lista').addEventListener('click', () => {
+  function irAFarmacia(index) {
+  actualizarFarmaciaDesdeCampos(); // guarda lo que quedó pendiente en el registro que se abandona
+  currentIndex = index;
+  mostrarFarmacia(index);
+  actualizarProgreso();
+}
+window.irAFarmacia = irAFarmacia;
+
+cargarFarmacias();
+  document.getElementById('btn-lista').addEventListener('click', (e) => {
+    e.stopPropagation();
     const panel = document.getElementById('panel-lista');
     if (panel.style.display === 'none') {
         panel.style.display = 'block';
         panel.innerHTML = todasFarmacias.map((f, i) => 
             `<div style="padding: 6px 8px; cursor: pointer; border-radius: 4px; color: #e6edf3; font-size: 13px; ${i === currentIndex ? 'background: #3fb950; color: #0d1117;' : ''}"
-                onclick="document.getElementById('panel-lista').style.display='none'; window.mostrarFarmacia(${i});">${i+1}. ${f.nombre} — ${f.direccion}</div>`
+                onclick="document.getElementById('panel-lista').style.display='none'; window.irAFarmacia(${i});">${i+1}. ${f.nombre} — ${f.direccion}</div>`
         ).join('');
     } else {
         panel.style.display = 'none';
     }
 });
-window.mostrarFarmacia = mostrarFarmacia;
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('panel-lista');
+  const btn = document.getElementById('btn-lista');
+  if (panel.style.display !== 'none' && !panel.contains(e.target) && e.target !== btn) {
+    panel.style.display = 'none';
+  }
+});
   bindEvents();
 </script>
 </body>
