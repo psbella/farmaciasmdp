@@ -1,4 +1,4 @@
-const CACHE_NAME = 'farmaturnos-v13';
+const CACHE_NAME = 'farmaturnos-v14';
 const urls = [
   '/',
   '/index.html',
@@ -8,11 +8,11 @@ const urls = [
   '/config.json',
   '/privacidad.html',
   '/terminos.html',
-  '/icon-512.png',
-  '/icon-96.png',
-  '/icon-48.png',
-  '/icon-32.png',
-  '/icon-16.png'
+  '/images/icon-512.png',
+  '/images/icon-96.png',
+  '/images/icon-48.png',
+  '/images/icon-32.png',
+  '/images/icon-16.png'
 ];
 
 // Instalación: cachear archivos estáticos
