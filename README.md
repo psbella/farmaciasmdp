@@ -1,5 +1,7 @@
 # Farmacias de Turno MDP
 
+<div align="center"> <img src="images/icon-512.png" width="120" alt="Farmacias de Turno MDP"> </div>
+
 > PWA estática que calcula la rotación diaria de farmacias de turno en Mar del Plata, Argentina, mediante un modelo matemático determinístico. Sin backend, sin dependencias.
 
 [![Version](https://img.shields.io/badge/version-2.10.1-blue)](https://farmaciasmdp.com.ar/)
