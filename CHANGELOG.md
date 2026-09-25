@@ -14,6 +14,47 @@ Todos los cambios notables de este proyecto se documentan acá. El formato sigue
 
 ## [Unreleased]
 
+## [2.10.0] - 2026-09-25
+
+### Added
+- `tests/`: tests unitarios con `node:test` (sin dependencias externas).
+  `ciclo.test.mjs` cubre el cálculo de qué grupo está de turno hoy
+  (`js/config.js` + `js/data.js`); `github-serializer.test.mjs` cubre
+  `serializarDb()`/`aplicarEdiciones()` de `js/admin/github.js`, que son las
+  que escriben `db.json` en producción.
+- `.github/workflows/tests.yml`: corre `npm test` en cada push a
+  `main`/`modular` y en cada Pull Request, con
+  `TZ=America/Argentina/Buenos_Aires` fijado (el cálculo de turno asume reloj
+  de Argentina).
+- `package.json`: nuevo, solo para declarar `"type": "module"` y el script
+  `test`. Sigue sin dependencias.
+- Badge de estado de CI en el README.
+
+### Changed
+- `admin-map.html`: el `<script>` monolítico (~380 líneas) se divide en
+  `js/admin/{config,state,dom,estado,auth,mapa,farmacias,github,main}.js`.
+  El `<style>` inline (~100 líneas) pasa a `css/admin.css`; se eliminan los
+  `style="..."` del HTML a favor de clases.
+- `style.css` (942 líneas) se divide en 10 archivos por sección en `css/`
+  (base, header, layout, cards, maps, controls, footer, responsive,
+  components, banner). Concatenados dan exactamente el `style.css` original
+  (verificado con `cmp` byte a byte).
+- `index.html`, `privacidad.html`, `terminos.html`: se extraen los
+  `<script>`/`<style>` inline a `js/analytics.js`, `js/legal-theme.js` y a
+  `css/privacidad.css`/`css/terminos.css`.
+- `js/main.js`: `agregarBotonIrArriba()` y el update del Service Worker
+  pasan a `js/scroll-top.js` y `js/sw-update.js`.
+- Íconos (`icon-16/32/48/96/512.png`, `icon-source.svg`) se mueven de la
+  raíz a `images/`. Rutas actualizadas en `sw.js`, `index.html` y
+  `manifest.json`.
+- `sw.js`: `CACHE_NAME` `v13` → `v14`, para que los Service Workers ya
+  instalados no sigan pidiendo `/icon-*.png` (ruta vieja) desde caché.
+
+Sin cambios de comportamiento visible para el usuario final — reorganización
+de archivos y tooling de desarrollo. Validado con un test diferencial en
+jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
+12 puntos de comparación) y con los 12 tests de `tests/` corriendo en CI.
+
 ## [2.9.0] - 2026-08-19
 
 ### Added
