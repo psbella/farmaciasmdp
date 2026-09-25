@@ -1,13 +1,13 @@
 # Farmacias de Turno MDP
 
-> PWA estática que calcula la rotación diaria de farmacias de turno en Mar del Plata, Argentina, mediante un modelo matemático determinístico. Sin backend, sin scraping, sin dependencias.
+> PWA estática que calcula la rotación diaria de farmacias de turno en Mar del Plata, Argentina, mediante un modelo matemático determinístico. Sin backend, sin dependencias.
 
 [![Version](https://img.shields.io/badge/version-2.10.1-blue)](https://farmaciasmdp.com.ar/)
 [![Tests](https://github.com/psbella/farmaciasmdp/actions/workflows/tests.yml/badge.svg)](https://github.com/psbella/farmaciasmdp/actions/workflows/tests.yml)
-[![Stable](https://img.shields.io/badge/stable-%E2%9C%93-brightgreen)](https://github.com/psbella/turnos)
+[![Stable](https://img.shields.io/badge/stable-%E2%9C%93-brightgreen)](https://github.com/psbella/farmaciasmdp)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey)](https://creativecommons.org/licenses/by-nc/4.0/)
 [![PWA](https://img.shields.io/badge/PWA-Enabled-5a0fc8)](https://web.dev/progressive-web-apps/)
-[![No Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)](https://github.com/psbella/turnos)
+[![No Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)](https://github.com/psbella/farmaciasmdp)
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white)](https://developer.mozilla.org/es/docs/Web/HTML)
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)](https://developer.mozilla.org/es/docs/Web/CSS)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)](https://developer.mozilla.org/es/docs/Web/JavaScript)
@@ -26,9 +26,10 @@
 - [Arquitectura del sistema](#arquitectura-del-sistema)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Stack tecnológico](#stack-tecnológico)
-- [Flujo de usuario](#flujo-de-usuario)
 - [Modelo de datos](#modelo-de-datos)
 - [Estrategia de caché (PWA)](#estrategia-de-caché-pwa)
+- [Tests y CI](#tests-y-ci)
+- [Panel de administración](#panel-de-administración)
 - [Instalación local](#instalación-local)
 - [Proyectos relacionados](#proyectos-relacionados)
 - [Licencia](#licencia)
@@ -37,35 +38,29 @@
 
 ## Descripción
 
-El Colegio de Farmacéuticos de General Pueyrredon organiza las farmacias de Mar del Plata en **16 grupos rotativos**. Esta aplicación replica esa lógica de forma completamente local: dado un punto de ancla conocido (`FECHA_INICIO_CICLO_1`) y la fecha actual, se calcula el grupo de turno con una operación de módulo. No hay llamadas a APIs externas para determinar el turno.
+El Colegio de Farmacéuticos de General Pueyrredon organiza las farmacias de Mar del Plata en **16 grupos rotativos**. Esta aplicación replica esa lógica de forma completamente local: dado un punto de ancla conocido (`FECHA_INICIO_CICLO_1`, en `config.json`) y la fecha actual, se calcula el grupo de turno con una operación de módulo. No hay llamadas a APIs externas para determinar el turno.
 
-La app es instalable como PWA, funciona offline gracias a un Service Worker y está optimizada para SEO con Schema.org, Open Graph y sitemap.
+La app es instalable como PWA (Android, desktop e iOS vía instrucciones propias), funciona offline gracias a un Service Worker, y está optimizada para SEO con Schema.org, Open Graph y sitemap.
 
 ---
 
 ## Cómo funciona la rotación
 
 ```
-grupo_hoy = Math.floor( diasDesde(FECHA_INICIO_CICLO_1, ahora) ) % 16
+grupo_hoy = ((diasDesde(FECHA_INICIO_CICLO_1, ahora) % 16) + 16) % 16 + 1
 ```
 
-El cambio de turno ocurre a las **09:00 hs (UTC-3)**. Si el usuario consulta antes de esa hora, se usa la fecha del día anterior.
+El cambio de turno ocurre a las **09:00 hs (hora de Argentina)**. Si el usuario consulta antes de esa hora, se usa el grupo del día anterior. La doble operación de módulo evita resultados negativos para fechas anteriores al ancla.
 
 ```mermaid
 flowchart TD
-    A([Usuario abre la app]) --> B[Obtiene fecha y hora actual]
-    B --> C[Lee FECHA_INICIO_CICLO_1\ndesde config.json]
-    C --> D{¿Hora actual < 09:00?}
-    D -- Sí --> E[Retrocede un día]
-    D -- No --> F[Usa fecha de hoy]
-    E --> G[Calcula días transcurridos\ndesde la fecha ancla]
-    F --> G
-    G --> H["grupo = Math.floor(días) % 16"]
-    H --> I[Lee grupo desde db.json]
-    I --> J[Renderiza lista de farmacias]
-    I --> K[Renderiza marcadores en mapa]
-    J --> L([App lista ✓])
-    K --> L
+    A[Fecha y hora actual] --> B{Antes de las 09:00?}
+    B -- Sí --> C[Usar fecha de ayer]
+    B -- No --> D[Usar fecha de hoy]
+    C --> E[grupo = días desde el ancla, mod 16]
+    D --> E
+    E --> F[Buscar grupo en db.json]
+    F --> G[Mostrar lista y mapa]
 ```
 
 ---
@@ -75,42 +70,14 @@ flowchart TD
 La aplicación es **100% estática**: no existe servidor de aplicaciones. GitHub Pages sirve los archivos, Cloudflare actúa como CDN y proxy DNS, y toda la lógica de negocio corre en el navegador del usuario.
 
 ```mermaid
-graph TB
-    subgraph user["Cliente"]
-        direction TB
-        SW["Service Worker\n(caché offline)"]
-        APP["JS ES6 Modules\n(lógica de rotación)"]
-        MAP["Leaflet\n(mapa interactivo)"]
-    end
-
-    subgraph infra["Infraestructura"]
-        CF["Cloudflare\nDNS + CDN"]
-        GHP["GitHub Pages\n(hosting estático)"]
-    end
-
-    subgraph assets["Assets servidos"]
-        HTML["index.html"]
-        CSS["style.css"]
-        JSMOD["js/"]
-        DB["db.json"]
-        CFG["config.json"]
-    end
-
-    subgraph third["Servicios externos"]
-        OSM["OpenStreetMap\n(tiles del mapa)"]
-        GF["Google Fonts"]
-        ADS["Google AdSense"]
-    end
-
-    VISITOR([Visitante]) --> CF
-    CF --> GHP
-    GHP --> assets
-    assets --> APP
-    APP --> MAP
-    MAP --> OSM
-    SW -.->|"Cache First"| assets
-    APP --> GF
-    APP --> ADS
+graph TD
+    Visitante --> Cloudflare
+    Cloudflare --> GitHubPages[GitHub Pages]
+    GitHubPages --> App[HTML + CSS + JS]
+    App --> ServiceWorker[Service Worker]
+    App --> Leaflet
+    Leaflet --> OSM[OpenStreetMap]
+    ServiceWorker -.-> App
 ```
 
 ---
@@ -118,37 +85,63 @@ graph TB
 ## Estructura del proyecto
 
 ```
-turnos/
+farmaciasmdp/
 ├── index.html                  # Entry point — contenido SSG para SEO + bootstrap JS
-├── style.css                   # Estilos globales con CSS custom properties (dark/light)
-├── sw.js                       # Service Worker — estrategia de caché multi-capa
-├── manifest.json               # Web App Manifest (PWA)
-│
-├── config.json                 # Fecha ancla del ciclo
-│                               #   { "FECHA_INICIO_CICLO_1": "2026-04-26T09:00:00-03:00" }
-│
-├── db.json                     # Base de datos de farmacias
-│                               #   { "1": [ {nombre, direccion, telefono, lat, lng}, ... ],
-│                               #     ...
-│                               #    "16": [ ... ] }
-│
-├── js/
-│   └── main.js                 # Módulo principal — inicializa UI, mapa y rotación
-│
-├── admin-map.html              # Herramienta interna para auditar coordenadas
+├── admin-map.html              # Panel interno para auditar/editar coordenadas
 ├── privacidad.html             # Política de privacidad
 ├── terminos.html               # Términos de uso
 │
-├── sitemap.xml                 # Sitemap para crawlers
-├── robots.txt                  # Directivas de indexación
-├── ads.txt                     # Autorización Google AdSense
-├── CNAME                       # → farmaciasmdp.com.ar
+├── config.json                 # Fecha ancla del ciclo
+│                                #   { "FECHA_INICIO_CICLO_1": "2026-04-25T09:00:00-03:00" }
+├── db.json                     # Base de datos de farmacias
+│                                #   { "1": [ {nombre, direccion, telefono, lat, lng}, ... ],
+│                                #     ..., "16": [...], "farmacias_extra": [...] }
+├── manifest.json                # Web App Manifest (PWA)
+├── sw.js                        # Service Worker — estrategia de caché multi-capa
 │
-├── icon-16.png
-├── icon-32.png
-├── icon-48.png
-├── icon-96.png
-└── icon-512.png                # Ícono PWA splash
+├── css/                         # Estilos, un archivo por sección
+│   ├── base.css · header.css · layout.css · cards.css · maps.css
+│   ├── controls.css · footer.css · responsive.css · components.css
+│   ├── banner.css · privacidad.css · terminos.css · admin.css
+│
+├── js/                          # Lógica del sitio público, un módulo ES6 por responsabilidad
+│   ├── main.js                  # Entry point — orquesta todo lo demás
+│   ├── config.js                # Carga config.json y expone FECHA_INICIO_CICLO_1
+│   ├── data.js                  # Cálculo de ciclo/turno, carga de db.json
+│   ├── maps.js                  # Mapa Leaflet, marcadores, popups
+│   ├── ui.js                    # Render de tarjetas, bottom sheet mobile
+│   ├── theme.js                 # Dark/light mode
+│   ├── install.js               # Botón "Instalar como app" + modal iOS
+│   ├── escape.js                # Sanitización de HTML para datos de farmacias
+│   ├── analytics.js             # Google Analytics (gtag)
+│   ├── legal-theme.js           # Tema claro/oscuro en privacidad.html / terminos.html
+│   ├── scroll-top.js            # Botón flotante "ir arriba"
+│   ├── sw-update.js             # Registro y actualización del Service Worker
+│   │
+│   └── admin/                   # Lógica del panel de administración (admin-map.html)
+│       ├── main.js · config.js · state.js · dom.js · estado.js
+│       ├── auth.js               # Login con token de GitHub
+│       ├── mapa.js               # Mapa, Google Maps embebido, búsqueda Nominatim
+│       ├── farmacias.js          # Navegación y edición de cada farmacia
+│       └── github.js             # Serializa y guarda db.json vía la Contents API
+│
+├── images/
+│   ├── icon-16/32/48/96/128/192/512.png   # Íconos PWA en todos los tamaños
+│   └── icon-source.svg                     # Vector fuente de los íconos
+│
+├── tests/                        # Tests unitarios (node:test, sin dependencias)
+│   ├── ciclo.test.mjs             # Cálculo de rotación
+│   ├── github-serializer.test.mjs # Serialización de db.json del panel admin
+│   └── README.md                  # Cómo correrlos y por qué hace falta fijar el TZ
+│
+├── .github/workflows/tests.yml   # CI: corre npm test en cada push/PR
+├── package.json                  # Solo declara "type": "module" y el script test
+│
+├── sitemap.xml · robots.txt      # SEO / crawlers
+├── ads.txt                       # Autorización Google AdSense
+├── CNAME                         # → farmaciasmdp.com.ar
+├── CHANGELOG.md                  # Historial de versiones (Keep a Changelog + SemVer)
+└── LICENSE                       # CC BY-NC 4.0
 ```
 
 ---
@@ -158,56 +151,18 @@ turnos/
 | Capa | Tecnología | Notas |
 |---|---|---|
 | Markup | HTML5 | Contenido SSG inline para SEO; Schema.org embebido |
-| Estilos | CSS3 + Custom Properties | Dark/light mode sin JS, mobile-first |
-| Lógica | JavaScript ES6+ Modules | Sin frameworks, sin bundler |
-| Mapas | Leaflet 1.x + OpenStreetMap | Marcadores SVG personalizados |
-| PWA | Service Worker + Web App Manifest | Cache API, instalable |
+| Estilos | CSS3 + Custom Properties | Dark/light mode sin JS, mobile-first, dividido por sección en `css/` |
+| Lógica | JavaScript ES6+ Modules | Sin frameworks, sin bundler, sin dependencias de npm |
+| Mapas | Leaflet 1.9.x + OpenStreetMap | Marcadores SVG personalizados |
+| PWA | Service Worker + Web App Manifest | Cache API, instalable en Android/desktop/iOS |
+| Tests | `node:test` (nativo de Node) | Cero dependencias externas |
+| CI | GitHub Actions | Corre los tests en cada push y PR |
 | Hosting | GitHub Pages | Deploy en cada push a `main` |
 | CDN / DNS | Cloudflare | HTTPS, caché edge, analytics |
 | SEO | Schema.org · Open Graph · Twitter Cards | Structured data + sitemap.xml |
 | Fuentes | Google Fonts | Bebas Neue (display) + Nunito (body) |
 | Publicidad | Google AdSense | — |
 | Monitoreo | Google Search Console · Cloudflare Analytics | Sin cookies propias |
-
----
-
-## Flujo de usuario
-
-### Primer acceso (red disponible)
-
-```mermaid
-sequenceDiagram
-    actor U as Usuario
-    participant B as Navegador
-    participant SW as Service Worker
-    participant CF as Cloudflare / GH Pages
-
-    U->>B: farmaciasmdp.com.ar
-    B->>CF: GET index.html
-    CF-->>B: 200 OK
-    B->>SW: Registro del SW
-    SW->>CF: Precachea config.json, db.json, css, js
-    CF-->>SW: Assets cacheados ✓
-    B->>B: Ejecuta js/main.js
-    B->>B: Calcula grupo del día
-    B->>B: Renderiza lista + mapa
-    B-->>U: App lista
-```
-
-### Accesos siguientes (con o sin red)
-
-```mermaid
-sequenceDiagram
-    actor U as Usuario
-    participant B as Navegador
-    participant SW as Service Worker
-
-    U->>B: farmaciasmdp.com.ar
-    B->>SW: Request interceptado
-    SW-->>B: Sirve desde caché ⚡
-    B->>B: Calcula grupo del día
-    B-->>U: App lista (sin red)
-```
 
 ---
 
@@ -220,7 +175,7 @@ erDiagram
     }
 
     GRUPO {
-        string id "Valores: '1' a '16'"
+        string id
         int total_farmacias
     }
 
@@ -228,8 +183,8 @@ erDiagram
         string nombre
         string direccion
         string telefono
-        float  lat "nullable — sin coordenadas: aparece en lista, no en mapa"
-        float  lng "nullable"
+        float lat
+        float lng
     }
 
     CONFIG ||--o{ GRUPO : "ancla el ciclo de"
@@ -238,8 +193,9 @@ erDiagram
 
 **Notas sobre la calidad de los datos:**
 
+- `db.json` tiene 171 farmacias únicas (por nombre + dirección) repartidas en 16 grupos, más una clave `farmacias_extra` (13 entradas) fuera del ciclo rotativo.
 - `MITRE (Colón 2690)` aparece en los 16 grupos — es farmacia de turno permanente.
-- Al menos una farmacia tiene `lat: null` (grupo 10) — se muestra en la lista pero no en el mapa.
+- La edición de coordenadas/datos se hace desde el [panel de administración](#panel-de-administración), no a mano.
 
 ---
 
@@ -247,21 +203,32 @@ erDiagram
 
 ```mermaid
 flowchart LR
-    REQ([Request]) --> SW{Service Worker}
-
-    SW -->|"HTML · CSS · JS · íconos"| C1["Cache First\n(assets estáticos)"]
-    SW -->|"config.json · db.json"| C2["Network First\n(datos)"]
-    SW -->|"Tiles OSM"| C3["Stale While Revalidate\n(mapa)"]
-
-    C1 --> RES([Respuesta])
-    C2 --> RES
-    C3 --> RES
+    Request --> SW[Service Worker]
+    SW --> Estatico[Cache First: HTML, CSS, JS, íconos]
+    SW --> Datos[Network First: config.json, db.json]
 ```
 
-El manifest declara `display: standalone` y `start_url: /`, por lo que la app se comporta como nativa una vez instalada desde el navegador.
+El manifest declara `display: standalone` y `start_url: /`, por lo que la app se comporta como nativa una vez instalada. El botón "Instalar como app" (`js/install.js`) escucha el evento `beforeinstallprompt` en Android/desktop, y muestra un modal con instrucciones manuales en iOS (donde ese evento no existe). El registro del Service Worker (`js/sw-update.js`) y el `<link rel="manifest">` en `index.html` son los dos requisitos que Chrome exige para ofrecer la instalación.
 
 ---
 
+## Tests y CI
+
+Tests unitarios con `node:test`, incluido en Node — sin dependencias externas, coherente con el resto del proyecto. Cubren la lógica que no depende de un navegador: el cálculo de rotación de turno y la serialización de `db.json` que hace el panel de administración. Ver [`tests/README.md`](tests/README.md) para el detalle de qué cubren y por qué.
+
+```bash
+TZ=America/Argentina/Buenos_Aires npm test
+```
+
+El workflow [`tests.yml`](.github/workflows/tests.yml) corre esto mismo en GitHub Actions en cada push a `main` y en cada Pull Request.
+
+---
+
+## Panel de administración
+
+`admin-map.html` es una herramienta interna (no pública, requiere un token de GitHub) para revisar y corregir nombre, dirección, teléfono y coordenadas de cada farmacia una por una, con mapa Leaflet, vista embebida de Google Maps y búsqueda de dirección vía Nominatim. Guarda los cambios directo en `db.json` a través de la Contents API de GitHub — no hay backend propio ni base de datos.
+
+---
 
 ## Instalación local
 
@@ -269,8 +236,8 @@ El manifest declara `display: standalone` y `start_url: /`, por lo que la app se
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/psbella/turnos.git
-cd turnos
+git clone https://github.com/psbella/farmaciasmdp.git
+cd farmaciasmdp
 
 # Opción A — Python (sin instalar nada)
 python3 -m http.server 8080
