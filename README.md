@@ -2,7 +2,7 @@
 
 > PWA estática que calcula la rotación diaria de farmacias de turno en Mar del Plata, Argentina, mediante un modelo matemático determinístico. Sin backend, sin scraping, sin dependencias.
 
-[![Version](https://img.shields.io/badge/version-2.10.0-blue)](https://farmaciasmdp.com.ar/)
+[![Version](https://img.shields.io/badge/version-2.10.1-blue)](https://farmaciasmdp.com.ar/)
 [![Tests](https://github.com/psbella/farmaciasmdp/actions/workflows/tests.yml/badge.svg)](https://github.com/psbella/farmaciasmdp/actions/workflows/tests.yml)
 [![Stable](https://img.shields.io/badge/stable-%E2%9C%93-brightgreen)](https://github.com/psbella/turnos)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey)](https://creativecommons.org/licenses/by-nc/4.0/)

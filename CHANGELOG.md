@@ -18,6 +18,34 @@ Todos los cambios notables de este proyecto se documentan acá. El formato sigue
 
 ---
 
+## [2.10.1] - 2026-09-25
+
+### Fixed
+- La PWA nunca se registraba como tal: no existía en ningún archivo un
+  `navigator.serviceWorker.register()` (solo había código para *actualizar*
+  un Service Worker ya registrado, `getRegistrations().then().update()`), ni
+  un `<link rel="manifest">` en `index.html`. Sin esas dos piezas, el
+  navegador no cumplía los requisitos de instalabilidad —
+  `beforeinstallprompt` nunca disparaba, sin importar que el botón, el
+  modal de iOS, `manifest.json` y `sw.js` ya estuvieran completos.
+  `js/sw-update.js` ahora exporta `registrarServiceWorker()`, llamada desde
+  `js/main.js` junto al chequeo de actualizaciones existente.
+- `sw.js` precacheaba `/app.js` y `/style.css`, ninguno de los dos existe
+  (`app.js` no existe desde el refactor de arquitectura de `2.0.0`;
+  `style.css` se eliminó en el refactor a módulos de `2.10.0`).
+  `Cache.addAll()` es todo-o-nada: una sola URL con status fuera de 2xx
+  hace fallar el evento `install` completo, y el navegador descarta el
+  Service Worker nuevo sin activarlo — afectaba a cualquier visitante sin
+  un SW previo ya activo. Lista de precache reescrita con los archivos
+  reales; `CACHE_NAME` `v14` → `v15`.
+- `manifest.json` pedía `icon-128.png`/`icon-192.png` sin que existieran en
+  el repo. Generados desde `images/icon-source.svg`.
+
+Confirmado funcionando en producción: instalación exitosa en Chrome/Windows
+y Chrome/Android.
+
+---
+
 ## [2.10.0] - 2026-09-25
 
 ### Added
