@@ -12,7 +12,11 @@ Todos los cambios notables de este proyecto se documentan acá. El formato sigue
 > el versionado es SemVer aplicado retroactivamente sobre la fecha real de cada
 > cambio.
 
+---
+
 ## [Unreleased]
+
+---
 
 ## [2.10.0] - 2026-09-25
 
@@ -51,9 +55,13 @@ Todos los cambios notables de este proyecto se documentan acá. El formato sigue
   instalados no sigan pidiendo `/icon-*.png` (ruta vieja) desde caché.
 
 Sin cambios de comportamiento visible para el usuario final — reorganización
-de archivos y tooling de desarrollo. Validado con un test diferencial en
-jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
-12 puntos de comparación) y con los 12 tests de `tests/` corriendo en CI.
+de archivos y tooling de desarrollo.
+
+> Validado con un test diferencial en jsdom entre `admin-map.html` original
+> y la versión modular (0 diferencias en 12 puntos de comparación) y con
+> los 12 tests de `tests/` corriendo en CI.
+
+---
 
 ## [2.9.0] - 2026-08-19
 
@@ -79,6 +87,8 @@ jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
 - `.badge-github` bajado de pill con fondo a link plano, consistente con el
   resto de la columna "Contacto" del footer.
 
+---
+
 ## [2.8.0] - 2026-08-18
 
 ### Changed
@@ -86,6 +96,8 @@ jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
   verde del isotipo nuevo, en vez de gris neutro. Contraste validado por
   cálculo WCAG, sin regresión respecto a la paleta anterior.
 - Cache del Service Worker `v8` → `v9`.
+
+---
 
 ## [2.7.0] - 2026-08-17
 
@@ -102,6 +114,8 @@ jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
   colores hardcodeados sin variante de tema.
 - Cache `v6` → `v8` (incluye un bump intermedio a v7 el 15/08).
 
+---
+
 ## [2.6.0] - 2026-08-15
 
 ### Added
@@ -114,10 +128,14 @@ jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
   `<svg>` sin coincidir con el `viewBox` (deformaba las proporciones).
 - Margen izquierdo del subtítulo del header reducido.
 
+---
+
 ## [2.5.0] - 2026-06-26
 
 ### Added
 - Analytics.
+
+---
 
 ## [2.4.0] - 2026-06-23
 
@@ -126,6 +144,8 @@ jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
 
 ### Changed
 - Refactor de `obtenerCicloActual`, código sin uso eliminado.
+
+---
 
 ## [2.3.0] - 2026-05-20
 
@@ -137,11 +157,15 @@ jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
 ### Changed
 - Múltiples intentos de geocoding para direcciones ambiguas.
 
+---
+
 ## [2.2.0] - 2026-05-19
 
 ### Added
 - Protección por contraseña, estilos y exportación a JSON en el editor de
   administración (`admin-map.html`).
+
+---
 
 ## [2.1.0] - 2026-05-06
 
@@ -150,13 +174,21 @@ jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
 - Integración completa de Google Ads.
 - Workflow de minificación de JS (removido más adelante, el 15/05).
 
+---
+
 ## [2.0.1] - 2026-05-05
 
 ### Added
 - Primera pasada de accesibilidad: `aria-label` en botón de cierre, estilos
   `focus-visible`, links y copyright del footer.
 
+---
+
 ## [2.0.0] - 2026-05-03
+
+### Added
+- Lógica de cálculo de ciclo de fin de semana (sábados/domingos), agregada el
+  02/05, justo antes de este refactor.
 
 ### Changed
 - **Refactor grande de arquitectura**: el `app.js` monolítico se separa en
@@ -166,9 +198,7 @@ jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
 - Manejo de tema (claro/oscuro) reescrito con modo automático.
 - README revisado documentando arquitectura y features de esta versión.
 
-### Added
-- Lógica de cálculo de ciclo de fin de semana (sábados/domingos), agregada el
-  02/05, justo antes de este refactor.
+---
 
 ## [1.0.0] - 2026-04-30
 
@@ -184,6 +214,8 @@ jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
   datos (`Vuelvo a versión sin cloudflare`), de regreso a fetch directo del
   JSON estático.
 
+---
+
 ## [0.4.0] - 2026-04-28
 
 ### Added
@@ -195,12 +227,16 @@ jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
 - Separación de CSS y JS del `index.html` monolítico original (primer
   refactor consciente de arquitectura del proyecto).
 
+---
+
 ## [0.3.0] - 2026-04-27
 
 ### Added
 - SEO: datos estructurados JSON-LD, link canónico, meta tags Open Graph y
   Twitter, sitemap.
 - Dominio propio (`CNAME`) por primera vez.
+
+---
 
 ## [0.2.0] - 2026-04-26
 
@@ -215,12 +251,16 @@ jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
   día ajustando el mismo valor — el bug recurrente más visible de esta etapa
   del proyecto).
 
+---
+
 ## [0.1.0] - 2026-04-23
 
 ### Added
 - Base de PWA: `manifest.json` y `sw.js`.
 - Primera versión de `privacidad.html`.
 - `LICENSE`.
+
+---
 
 ## [0.0.1] - 2026-04-20 al 2026-04-22
 
@@ -229,3 +269,14 @@ jsdom entre `admin-map.html` original y la versión modular (0 diferencias en
 - `scraper.js` y workflow de GitHub Actions (`update.yml`) para el ETL de
   datos de farmacias — la base del pipeline automático que sigue en pie hoy.
 - `data.js`, primera limpieza de archivos innecesarios.
+
+---
+
+<!--
+  Links de comparación: solo para los tags que existen de verdad en el
+  repo (v1.0 y v2.0, ver nota del encabezado). El resto de las versiones
+  de este changelog no tiene tag de git propio, así que no hay diff real
+  para linkear sin inventar una referencia inexistente.
+-->
+[2.0.0]: https://github.com/psbella/farmaciasmdp/compare/v1.0...v2.0
+[1.0.0]: https://github.com/psbella/farmaciasmdp/releases/tag/v1.0
