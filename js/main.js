@@ -5,7 +5,7 @@ import { mostrarFarmacias, mostrarTodasLasFarmacias, volverATurno } from './ui.j
 import { initTheme, setupThemeSwitch } from './theme.js';
 import { setupInstallPWA } from './install.js';
 import { agregarBotonIrArriba } from './scroll-top.js';
-import { actualizarServiceWorkers } from './sw-update.js';
+import { registrarServiceWorker, actualizarServiceWorkers } from './sw-update.js';
 
 // Exponer mapas y marcadores como getters
 Object.defineProperty(window, 'mapDesktop', { get: () => mapDesktop });
@@ -36,6 +36,7 @@ window.volverATurno = volverATurno;
 
 // Inicialización
 (async () => {
+  registrarServiceWorker();
   actualizarServiceWorkers();
   initTheme();
   setupThemeSwitch();
