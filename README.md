@@ -161,7 +161,6 @@ farmaciasmdp/
 | CDN / DNS | Cloudflare | HTTPS, caché edge, analytics |
 | SEO | Schema.org · Open Graph · Twitter Cards | Structured data + sitemap.xml |
 | Fuentes | Google Fonts | Bebas Neue (display) + Nunito (body) |
-| Publicidad | Google AdSense | — |
 | Monitoreo | Google Search Console · Cloudflare Analytics | Sin cookies propias |
 
 ---
