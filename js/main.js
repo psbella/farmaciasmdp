@@ -4,30 +4,14 @@ import { initMaps, limpiarMarcadores, agregarMarcadores, mapDesktop, mapMobile, 
 import { mostrarFarmacias, mostrarTodasLasFarmacias, volverATurno } from './ui.js';
 import { initTheme, setupThemeSwitch } from './theme.js';
 import { setupInstallPWA } from './install.js';
+import { agregarBotonIrArriba } from './scroll-top.js';
+import { actualizarServiceWorkers } from './sw-update.js';
 
 // Exponer mapas y marcadores como getters
 Object.defineProperty(window, 'mapDesktop', { get: () => mapDesktop });
 Object.defineProperty(window, 'mapMobile', { get: () => mapMobile });
 Object.defineProperty(window, 'markersDesktop', { get: () => markersDesktop });
 Object.defineProperty(window, 'markersMobile', { get: () => markersMobile });
-
-// Función para el botón "Ir arriba"
-function agregarBotonIrArriba() {
-  if (!document.querySelector('.scroll-top-btn')) {
-    const btn = document.createElement('button');
-    btn.className = 'scroll-top-btn';
-    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 4v16M12 4l-4 4M12 4l4 4"/></svg>`;
-    btn.setAttribute('aria-label', 'Ir arriba');
-    document.body.appendChild(btn);
-
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 300) btn.classList.add('visible');
-      else btn.classList.remove('visible');
-    });
-
-    btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-  }
-}
 
 function programarActualizacion() {
   const a = new Date();
@@ -52,6 +36,7 @@ window.volverATurno = volverATurno;
 
 // Inicialización
 (async () => {
+  actualizarServiceWorkers();
   initTheme();
   setupThemeSwitch();
   setupInstallPWA();
