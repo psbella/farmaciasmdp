@@ -1,4 +1,5 @@
 import { ciclosData, farmaciasCoords, obtenerCicloActual, obtenerFarmaciasDelDia, formatearFechaTurno, limpiarTelefono } from './data.js';
+import { escapeHtml } from './escape.js';
 import { agregarMarcadores, limpiarMarcadores, mapDesktop, mapMobile, markersDesktop, markersMobile } from './maps.js';
 
 let activeCard = null;
@@ -50,12 +51,12 @@ export async function mostrarFarmacias() {
     div.setAttribute('aria-label', `Ver detalles de ${f.nombre}`);
 
     const tClean = limpiarTelefono(f.telefono);
-    const tLink = tClean ? `<a href="tel:${tClean}" class="phone-link" onclick="event.stopPropagation();">${getPhoneIcon()} ${f.telefono}</a>` : `<span class="phone-link">${getPhoneIcon()} Sin teléfono</span>`;
+    const tLink = tClean ? `<a href="tel:${tClean}" class="phone-link" onclick="event.stopPropagation();">${getPhoneIcon()} ${escapeHtml(f.telefono)}</a>` : `<span class="phone-link">${getPhoneIcon()} Sin teléfono</span>`;
 
     div.innerHTML = `<div class="card-num">${pad(i + 1)}</div>
       <div class="card-info">
-        <div class="card-name">${f.nombre}</div>
-        <div class="card-address">${getLocationIcon()} ${f.direccion}</div>
+        <div class="card-name">${escapeHtml(f.nombre)}</div>
+        <div class="card-address">${getLocationIcon()} ${escapeHtml(f.direccion)}</div>
       </div>
       <div class="card-phone">${tLink}</div>`;
 
@@ -80,7 +81,7 @@ export async function mostrarFarmacias() {
         }, 150);
       } else {
         const sheet = document.getElementById('mapSheet');
-        document.getElementById('sheetName').innerHTML = `${f.nombre}<br><small style="font-size:12px">${f.direccion}</small>`;
+        document.getElementById('sheetName').innerHTML = `${escapeHtml(f.nombre)}<br><small style="font-size:12px">${escapeHtml(f.direccion)}</small>`;
         sheet.classList.add('open');
         if (c && mapMobile) {
           mapMobile.setView(c, 16);
@@ -158,12 +159,12 @@ export function mostrarTodasLasFarmacias() {
     const badgeHtml = esDeTurnoHoy ? '<span class="badge-hoy-inline"><span class="circulo"></span> Hoy de turno</span>' : '';
 
     const tClean = limpiarTelefono(f.telefono);
-    const tLink = tClean ? `<a href="tel:${tClean}" class="phone-link" onclick="event.stopPropagation();">${getPhoneIcon()} ${f.telefono}</a>` : `<span class="phone-link">${getPhoneIcon()} Sin teléfono</span>`;
+    const tLink = tClean ? `<a href="tel:${tClean}" class="phone-link" onclick="event.stopPropagation();">${getPhoneIcon()} ${escapeHtml(f.telefono)}</a>` : `<span class="phone-link">${getPhoneIcon()} Sin teléfono</span>`;
 
     div.innerHTML = `<div class="card-num">${i + 1}</div>
       <div class="card-info">
-        <div class="card-name">${f.nombre}</div>
-        <div class="card-address">${getLocationIcon()} ${f.direccion}</div>
+        <div class="card-name">${escapeHtml(f.nombre)}</div>
+        <div class="card-address">${getLocationIcon()} ${escapeHtml(f.direccion)}</div>
         ${badgeHtml ? `<div class="card-badge">${badgeHtml}</div>` : ''}
       </div>
       <div class="card-phone">${tLink}</div>`;
@@ -187,7 +188,7 @@ export function mostrarTodasLasFarmacias() {
         }, 150);
       } else {
         const sheet = document.getElementById('mapSheet');
-        document.getElementById('sheetName').innerHTML = `${f.nombre}<br><small style="font-size:12px">${f.direccion}</small>`;
+        document.getElementById('sheetName').innerHTML = `${escapeHtml(f.nombre)}<br><small style="font-size:12px">${escapeHtml(f.direccion)}</small>`;
         sheet.classList.add('open');
         if (coords && mapMobile) {
           mapMobile.setView(coords, 16);

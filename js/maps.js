@@ -1,4 +1,5 @@
 import { farmaciasCoords, limpiarTelefono } from './data.js';
+import { escapeHtml } from './escape.js';
 import { capFirst } from './ui.js';
 
 let mapDesktop = null;
@@ -44,7 +45,7 @@ export function agregarMarcadores(farmacias) {
     const c = f.lat && f.lng ? [f.lat, f.lng] : null;
     farmaciasCoords[i] = c;
 
-    const pop = `<b>${f.nombre}</b><br>${f.direccion}<br>${getPhoneLink(f)}<br><a href="${getGoogleMapsLink(f.direccion)}" target="_blank" class="gmaps-link" rel="noopener noreferrer">Google Maps</a>`;
+    const pop = `<b>${escapeHtml(f.nombre)}</b><br>${escapeHtml(f.direccion)}<br>${getPhoneLink(f)}<br><a href="${getGoogleMapsLink(f.direccion)}" target="_blank" class="gmaps-link" rel="noopener noreferrer">Google Maps</a>`;
 
     if (c) {
       const mD = L.marker(c, { icon: pharmacyIcon }).addTo(mapDesktop).bindPopup(pop);
@@ -100,7 +101,7 @@ export function agregarMarcadores(farmacias) {
 function getPhoneLink(f) {
   const tClean = limpiarTelefono(f.telefono);
   const phoneIcon = getPhoneIcon();
-  return tClean ? `<a href="tel:${tClean}" class="phone-link" onclick="event.stopPropagation();">${phoneIcon} ${f.telefono}</a>` : `<span class="phone-link">${phoneIcon} Sin teléfono</span>`;
+  return tClean ? `<a href="tel:${tClean}" class="phone-link" onclick="event.stopPropagation();">${phoneIcon} ${escapeHtml(f.telefono)}</a>` : `<span class="phone-link">${phoneIcon} Sin teléfono</span>`;
 }
 
 function getGoogleMapsLink(direccion) {
