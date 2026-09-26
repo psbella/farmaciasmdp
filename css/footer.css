@@ -61,6 +61,10 @@
   letter-spacing: 0.5px;
 }
 
+a.footer-col__title:hover {
+  text-decoration: underline;
+}
+
 .footer-col a {
   font-size: 13px;
   color: var(--muted);
