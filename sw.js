@@ -1,4 +1,4 @@
-const CACHE_NAME = 'farmaturnos-v16';
+const CACHE_NAME = 'farmaturnos-v17';
 const urls = [
   '/',
   '/index.html',
