@@ -1347,6 +1347,13 @@
       "telefono": "2235276015",
       "lat": -37.986912,
       "lng": -57.545119
+    },
+    {
+      "nombre": "PURAFARMA",
+      "direccion": "Alsina 3307",
+      "telefono": "2235706060",
+      "lat": -38.017742,
+      "lng": -57.546541
     }
   ]
 }
