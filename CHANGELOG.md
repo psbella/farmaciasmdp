@@ -16,17 +16,22 @@ Todos los cambios notables de este proyecto se documentan acá. El formato sigue
 
 ## [Unreleased]
 
+---
+
+## [2.11.0] - 2026-10-21
+
 ### Added
 - `como-funciona.html`: explica la rotación de 16 grupos, el cambio de turno a las 9:00 y cómo calcula el sitio la farmacia de turno.
-- `farmacias.html`: directorio estático con todas las farmacias, generado desde `db.json` con `npm run directorio`; `tests/directorio.test.mjs` verifica que no quede desactualizado.
-- `ads.txt` en la raíz (el README lo listaba pero el archivo no existía en el repo).
-- Enlaces a las páginas nuevas en el footer de todas las páginas y en `sitemap.xml`.
+- `farmacias.html`: directorio estático con todas las farmacias, generado desde `db.json` con `npm run directorio` (`scripts/directorio.mjs`). `tests/directorio.test.mjs` falla en CI si el archivo quedó desactualizado.
+- `ads.txt` en la raíz: el README lo listaba pero el archivo no existía en el repo.
+- `js/paginas.js`: "Instalar como app" (botón, modal de iOS, `<link rel="manifest">`) y registro del Service Worker en `como-funciona.html`, `farmacias.html`, `privacidad.html` y `terminos.html`, que antes no lo tenían. Las páginas nuevas incluyen además los íconos/favicon.
+- Enlaces a las páginas nuevas en el footer de `index.html`, `privacidad.html` y `terminos.html`, y en `sitemap.xml`.
 
 ### Changed
-- "Instalar como app" (botón, modal de iOS, `<link rel="manifest">` y registro del Service Worker) también en `como-funciona.html`, `farmacias.html`, `privacidad.html` y `terminos.html`, vía `js/paginas.js`; caché `farmaturnos-v19`.
-- `index.html`: el bloque informativo `#static-content` pasó de estar fuera de pantalla (`left: -9999px`) a ser una sección visible antes del footer.
-- `index.html`: se quitaron las dos tarjetas de farmacias precargadas; ahora `#lista` muestra «Cargando farmacias de turno…» hasta que `ui.js` la reemplaza.
-- `sw.js`: caché `farmaturnos-v18` con las páginas nuevas (sin subir la versión, los usuarios con el Service Worker instalado seguirían viendo el `index.html` anterior).
+- `index.html`: el bloque informativo `#static-content` pasó de estar fuera de pantalla (`left: -9999px`) a ser una sección visible antes del footer; la lista de farmacias "frecuentes" se reemplazó por un enlace al directorio.
+- `index.html`: se quitaron las dos tarjetas de farmacias precargadas; `#lista` muestra «Cargando farmacias de turno…» hasta que `ui.js` la reemplaza.
+- `sw.js`: caché `farmaturnos-v19` con las páginas y scripts nuevos. Sin subir la versión del caché, los usuarios con el Service Worker instalado seguirían viendo el `index.html` anterior (estrategia cache-first).
+- `README.md`: estructura del proyecto actualizada y conteo de `db.json` corregido (172 farmacias únicas, 14 en `farmacias_extra`).
 
 ---
 
