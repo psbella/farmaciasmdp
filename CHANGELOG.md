@@ -16,6 +16,17 @@ Todos los cambios notables de este proyecto se documentan acá. El formato sigue
 
 ## [Unreleased]
 
+### Added
+- `como-funciona.html`: explica la rotación de 16 grupos, el cambio de turno a las 9:00 y cómo calcula el sitio la farmacia de turno.
+- `farmacias.html`: directorio estático con todas las farmacias, generado desde `db.json` con `npm run directorio`; `tests/directorio.test.mjs` verifica que no quede desactualizado.
+- `ads.txt` en la raíz (el README lo listaba pero el archivo no existía en el repo).
+- Enlaces a las páginas nuevas en el footer de todas las páginas y en `sitemap.xml`.
+
+### Changed
+- `index.html`: el bloque informativo `#static-content` pasó de estar fuera de pantalla (`left: -9999px`) a ser una sección visible antes del footer.
+- `index.html`: se quitaron las dos tarjetas de farmacias precargadas; ahora `#lista` muestra «Cargando farmacias de turno…» hasta que `ui.js` la reemplaza.
+- `sw.js`: caché `farmaturnos-v18` con las páginas nuevas (sin subir la versión, los usuarios con el Service Worker instalado seguirían viendo el `index.html` anterior).
+
 ---
 
 ## [2.10.1] - 2026-09-25

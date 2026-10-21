@@ -1,4 +1,4 @@
-const CACHE_NAME = 'farmaturnos-v17';
+const CACHE_NAME = 'farmaturnos-v18';
 const urls = [
   '/',
   '/index.html',
@@ -6,6 +6,8 @@ const urls = [
   '/config.json',
   '/privacidad.html',
   '/terminos.html',
+  '/como-funciona.html',
+  '/farmacias.html',
   '/css/base.css',
   '/css/header.css',
   '/css/layout.css',
@@ -18,6 +20,7 @@ const urls = [
   '/css/banner.css',
   '/css/privacidad.css',
   '/css/terminos.css',
+  '/css/paginas.css',
   '/js/main.js',
   '/js/config.js',
   '/js/data.js',

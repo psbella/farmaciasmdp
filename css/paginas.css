@@ -1,0 +1,29 @@
+/* Estilos extra para como-funciona.html y farmacias.html (se suman a privacidad.css) */
+h3 { font-size: 16px; margin: 20px 0 6px; }
+
+.dir-total { color: var(--muted-dark); }
+body.light .dir-total { color: var(--muted-light); }
+
+.dir-indice { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 8px; }
+.dir-indice a {
+  padding: 4px 10px;
+  border: 1px solid var(--border-dark);
+  border-radius: 8px;
+  font-weight: 700;
+}
+body.light .dir-indice a { border-color: var(--border-light); }
+
+.dir-letra { scroll-margin-top: 16px; }
+.dir-lista { list-style: none; padding: 0; margin: 8px 0 24px; }
+.dir-lista li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-dark);
+}
+body.light .dir-lista li { border-bottom-color: var(--border-light); }
+.dir-nombre { width: 100%; font-weight: 700; }
+.dir-dato { color: var(--muted-dark); }
+body.light .dir-dato { color: var(--muted-light); }

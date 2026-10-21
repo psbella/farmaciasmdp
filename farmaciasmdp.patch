@@ -1,0 +1,880 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 06eecc6..8ad4fe5 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -16,6 +16,17 @@ Todos los cambios notables de este proyecto se documentan acá. El formato sigue
+ 
+ ## [Unreleased]
+ 
++### Added
++- `como-funciona.html`: explica la rotación de 16 grupos, el cambio de turno a las 9:00 y cómo calcula el sitio la farmacia de turno.
++- `farmacias.html`: directorio estático con todas las farmacias, generado desde `db.json` con `npm run directorio`; `tests/directorio.test.mjs` verifica que no quede desactualizado.
++- `ads.txt` en la raíz (el README lo listaba pero el archivo no existía en el repo).
++- Enlaces a las páginas nuevas en el footer de todas las páginas y en `sitemap.xml`.
++
++### Changed
++- `index.html`: el bloque informativo `#static-content` pasó de estar fuera de pantalla (`left: -9999px`) a ser una sección visible antes del footer.
++- `index.html`: se quitaron las dos tarjetas de farmacias precargadas; ahora `#lista` muestra «Cargando farmacias de turno…» hasta que `ui.js` la reemplaza.
++- `sw.js`: caché `farmaturnos-v18` con las páginas nuevas (sin subir la versión, los usuarios con el Service Worker instalado seguirían viendo el `index.html` anterior).
++
+ ---
+ 
+ ## [2.10.1] - 2026-09-25
+diff --git a/README.md b/README.md
+index 6435832..f1b1808 100644
+--- a/README.md
++++ b/README.md
+@@ -88,10 +88,12 @@ graph TD
+ 
+ ```
+ farmaciasmdp/
+-├── index.html                  # Entry point — contenido SSG para SEO + bootstrap JS
++├── index.html                  # Entry point — HTML con contenido informativo visible + bootstrap JS
+ ├── admin-map.html              # Panel interno para auditar/editar coordenadas
+ ├── privacidad.html             # Política de privacidad
+ ├── terminos.html               # Términos de uso
++├── como-funciona.html          # Explicación de la rotación de 16 grupos y el cambio de turno
++├── farmacias.html              # Directorio completo (generado desde db.json, ver scripts/)
+ │
+ ├── config.json                 # Fecha ancla del ciclo
+ │                                #   { "FECHA_INICIO_CICLO_1": "2026-04-25T09:00:00-03:00" }
+@@ -104,7 +106,7 @@ farmaciasmdp/
+ ├── css/                         # Estilos, un archivo por sección
+ │   ├── base.css · header.css · layout.css · cards.css · maps.css
+ │   ├── controls.css · footer.css · responsive.css · components.css
+-│   ├── banner.css · privacidad.css · terminos.css · admin.css
++│   ├── banner.css · privacidad.css · terminos.css · paginas.css · admin.css
+ │
+ ├── js/                          # Lógica del sitio público, un módulo ES6 por responsabilidad
+ │   ├── main.js                  # Entry point — orquesta todo lo demás
+@@ -131,9 +133,13 @@ farmaciasmdp/
+ │   ├── icon-16/32/48/96/128/192/512.png   # Íconos PWA en todos los tamaños
+ │   └── icon-source.svg                     # Vector fuente de los íconos
+ │
++├── scripts/
++│   └── directorio.mjs            # `npm run directorio`: regenera la lista de farmacias.html desde db.json
++│
+ ├── tests/                        # Tests unitarios (node:test, sin dependencias)
+ │   ├── ciclo.test.mjs             # Cálculo de rotación
+ │   ├── github-serializer.test.mjs # Serialización de db.json del panel admin
++│   ├── directorio.test.mjs        # farmacias.html sincronizado con db.json
+ │   └── README.md                  # Cómo correrlos y por qué hace falta fijar el TZ
+ │
+ ├── .github/workflows/tests.yml   # CI: corre npm test en cada push/PR
+@@ -194,7 +200,8 @@ erDiagram
+ 
+ **Notas sobre la calidad de los datos:**
+ 
+-- `db.json` tiene 171 farmacias únicas (por nombre + dirección) repartidas en 16 grupos, más una clave `farmacias_extra` (13 entradas) fuera del ciclo rotativo.
++- `db.json` tiene 172 farmacias únicas (por nombre + dirección) repartidas en 16 grupos, e incluye una clave `farmacias_extra` (14 entradas) fuera del ciclo rotativo.
++- `farmacias.html` es HTML estático generado desde `db.json`. Si cambiás nombre, dirección o teléfono (a mano o desde el panel admin), corré `npm run directorio` y commiteá el resultado; si no, el test `directorio.test.mjs` falla en CI.
+ - `MITRE (Colón 2690)` aparece en los 16 grupos — es farmacia de turno permanente.
+ - La edición de coordenadas/datos se hace desde el [panel de administración](#panel-de-administración), no a mano.
+ 
+diff --git a/ads.txt b/ads.txt
+new file mode 100644
+index 0000000..f8d92ce
+--- /dev/null
++++ b/ads.txt
+@@ -0,0 +1 @@
++google.com, pub-6384773741296777, DIRECT, f08c47fec0942fa0
+diff --git a/como-funciona.html b/como-funciona.html
+new file mode 100644
+index 0000000..cfb280d
+--- /dev/null
++++ b/como-funciona.html
+@@ -0,0 +1,90 @@
++<!DOCTYPE html>
++<html lang="es">
++<head>
++  <meta charset="UTF-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
++  <title>Cómo funcionan los turnos de farmacias en Mar del Plata · Farmacias de Turno MDP</title>
++  <meta name="description" content="Cómo se organiza la rotación de farmacias de turno en Mar del Plata: 16 grupos, cambio de turno a las 9:00 y cómo calcula el sitio la farmacia de guardia de cada día.">
++  <link rel="canonical" href="https://farmaciasmdp.com.ar/como-funciona.html">
++  <link rel="stylesheet" href="css/base.css">
++  <link rel="stylesheet" href="css/header.css">
++  <link rel="stylesheet" href="css/layout.css">
++  <link rel="stylesheet" href="css/cards.css">
++  <link rel="stylesheet" href="css/maps.css">
++  <link rel="stylesheet" href="css/controls.css">
++  <link rel="stylesheet" href="css/footer.css">
++  <link rel="stylesheet" href="css/responsive.css">
++  <link rel="stylesheet" href="css/components.css">
++  <link rel="stylesheet" href="css/banner.css">
++  <link rel="stylesheet" href="css/privacidad.css">
++  <link rel="stylesheet" href="css/paginas.css">
++</head>
++<body>
++  <div class="container">
++    <h1>Cómo funcionan los turnos de farmacias en Mar del Plata</h1>
++
++    <p>Las farmacias de turno son las que atienden las 24 horas cuando el resto está cerrado. En Mar del Plata no son siempre las mismas: rotan según un cronograma. Esta página explica cómo funciona esa rotación y cómo la calcula este sitio, para que sepas qué esperar cuando consultás.</p>
++
++    <h2>El sistema de 16 grupos</h2>
++    <p>Las farmacias de la ciudad se reparten en 16 grupos. Cada día queda de turno un grupo completo, y al llegar al último la rotación vuelve a empezar desde el primero. Por eso una farmacia determinada, salvo las que figuran en todos los grupos, queda de turno una vez cada 16 días.</p>
++    <p>La farmacia MITRE (Colón 2690) es la excepción: aparece en los 16 grupos, así que está de turno todos los días.</p>
++
++    <h2>A qué hora cambia el turno</h2>
++    <p>El turno empieza a las 9:00 y termina a las 9:00 del día siguiente. Esto tiene una consecuencia práctica: si consultás de madrugada, entre las 0:00 y las 9:00, las farmacias que ves son las del turno que empezó el día anterior. Por ejemplo, un sábado a las 7 de la mañana todavía rige el turno del viernes.</p>
++
++    <h2>Cómo calcula el sitio la farmacia de turno de hoy</h2>
++    <p>El sitio no consulta ningún servicio en tiempo real. Parte de una fecha de referencia en la que empezó el grupo 1, cuenta cuántos días pasaron desde entonces y se queda con el resto de dividir esa cantidad por 16. Ese resto indica qué grupo está de turno. Como es una cuenta y no una consulta, funciona igual los fines de semana, en feriados y sin conexión.</p>
++    <p>El cálculo se basa en la rotación oficial. Si el Colegio de Farmacéuticos modificara el orden de los grupos, el sitio puede tardar en reflejarlo. Si se trata de una urgencia, llamá a la farmacia antes de ir.</p>
++
++    <h2>Cómo usar el sitio</h2>
++    <ul>
++      <li>La lista principal muestra las farmacias del turno vigente, ordenadas alfabéticamente.</li>
++      <li>Tocá una farmacia para ver su ubicación en el mapa.</li>
++      <li>Desde el celular, tocá el teléfono para llamar directamente.</li>
++      <li>El botón «Ver todas» muestra todas las farmacias de la ciudad y marca cuáles están hoy de turno. También tenés el <a href="farmacias.html">directorio completo</a> en una página aparte.</li>
++      <li>Podés instalarlo como aplicación en el celular o la computadora; una vez cargado, funciona sin conexión con los últimos datos descargados.</li>
++      <li>Tiene modo claro y modo oscuro.</li>
++    </ul>
++
++    <h2>Consejos antes de ir</h2>
++    <ul>
++      <li>Llamá para confirmar que está atendiendo y que tiene lo que necesitás.</li>
++      <li>Revisá la dirección en el mapa: algunas calles de la ciudad tienen nombres parecidos.</li>
++      <li>En una emergencia médica, llamá al 107 en lugar de buscar una farmacia.</li>
++    </ul>
++
++    <h2>Preguntas frecuentes</h2>
++
++    <h3>¿Por qué las farmacias cambian todos los días?</h3>
++    <p>Porque cada día está de turno un grupo distinto, siguiendo la rotación de 16 grupos.</p>
++
++    <h3>¿Por qué de madrugada veo las farmacias de ayer?</h3>
++    <p>Porque el turno cambia a las 9:00. Hasta esa hora sigue vigente el turno que empezó el día anterior.</p>
++
++    <h3>Encontré un teléfono o una dirección incorrectos, ¿cómo lo aviso?</h3>
++    <p>Escribí a <a href="mailto:pablo.s.bella@gmail.com?subject=Web%20Farmacias">pablo.s.bella@gmail.com</a> indicando el nombre de la farmacia y el dato a corregir.</p>
++
++    <h3>¿Tiene costo usar el sitio?</h3>
++    <p>No. Es gratuito y no pide registro ni datos personales.</p>
++
++    <hr>
++
++    <div style="text-align: center; margin: 30px 0 20px;">
++      <a href="/" class="btn-volver-app">← Volver a la aplicación</a>
++    </div>
++
++    <footer class="footer">
++      <p><span class="code-symbol">&lt;/&gt;</span> Desarrollado por <a href="mailto:pablo.s.bella@gmail.com?subject=Web%20Farmacias">Pablo Bella</a> con 💚</p>
++      <p>
++        <a href="como-funciona.html">Cómo funcionan los turnos</a> ·
++        <a href="farmacias.html">Directorio de farmacias</a> ·
++        <a href="privacidad.html">Política de Privacidad</a> ·
++        <a href="terminos.html">Términos y Condiciones</a> ·
++        <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener noreferrer">CC BY-NC 4.0</a>
++      </p>
++    </footer>
++  </div>
++
++<script src="js/legal-theme.js"></script>
++</body>
++</html>
+diff --git a/css/components.css b/css/components.css
+index ac2896a..3d35228 100644
+--- a/css/components.css
++++ b/css/components.css
+@@ -88,3 +88,18 @@ a:focus-visible,
+   border-radius: 30px;
+ }
+ 
++
++/* ==================== SECCIÓN INFORMATIVA (index.html) ==================== */
++.info-section {
++  max-width: 1100px;
++  margin: 0 auto;
++  padding: 32px 24px 8px;
++  color: var(--text);
++  font-size: 14px;
++  line-height: 1.6;
++}
++.info-section h2 { font-size: 20px; color: var(--accent); margin: 0 0 12px; }
++.info-section h3 { font-size: 15px; margin: 20px 0 6px; }
++.info-section p, .info-section ul { margin: 0 0 8px; }
++.info-section ul { padding-left: 20px; }
++.info-section a { color: var(--accent); }
+diff --git a/css/paginas.css b/css/paginas.css
+new file mode 100644
+index 0000000..423c4a2
+--- /dev/null
++++ b/css/paginas.css
+@@ -0,0 +1,29 @@
++/* Estilos extra para como-funciona.html y farmacias.html (se suman a privacidad.css) */
++h3 { font-size: 16px; margin: 20px 0 6px; }
++
++.dir-total { color: var(--muted-dark); }
++body.light .dir-total { color: var(--muted-light); }
++
++.dir-indice { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 8px; }
++.dir-indice a {
++  padding: 4px 10px;
++  border: 1px solid var(--border-dark);
++  border-radius: 8px;
++  font-weight: 700;
++}
++body.light .dir-indice a { border-color: var(--border-light); }
++
++.dir-letra { scroll-margin-top: 16px; }
++.dir-lista { list-style: none; padding: 0; margin: 8px 0 24px; }
++.dir-lista li {
++  display: flex;
++  flex-wrap: wrap;
++  justify-content: space-between;
++  gap: 2px 16px;
++  padding: 10px 0;
++  border-bottom: 1px solid var(--border-dark);
++}
++body.light .dir-lista li { border-bottom-color: var(--border-light); }
++.dir-nombre { width: 100%; font-weight: 700; }
++.dir-dato { color: var(--muted-dark); }
++body.light .dir-dato { color: var(--muted-light); }
+diff --git a/farmacias.html b/farmacias.html
+new file mode 100644
+index 0000000..9ac0226
+--- /dev/null
++++ b/farmacias.html
+@@ -0,0 +1,306 @@
++<!DOCTYPE html>
++<html lang="es">
++<head>
++  <meta charset="UTF-8">
++  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
++  <title>Directorio de farmacias de Mar del Plata · Farmacias de Turno MDP</title>
++  <meta name="description" content="Directorio de todas las farmacias de Mar del Plata, ordenado alfabéticamente, con dirección y teléfono de cada una.">
++  <link rel="canonical" href="https://farmaciasmdp.com.ar/farmacias.html">
++  <link rel="stylesheet" href="css/base.css">
++  <link rel="stylesheet" href="css/header.css">
++  <link rel="stylesheet" href="css/layout.css">
++  <link rel="stylesheet" href="css/cards.css">
++  <link rel="stylesheet" href="css/maps.css">
++  <link rel="stylesheet" href="css/controls.css">
++  <link rel="stylesheet" href="css/footer.css">
++  <link rel="stylesheet" href="css/responsive.css">
++  <link rel="stylesheet" href="css/components.css">
++  <link rel="stylesheet" href="css/banner.css">
++  <link rel="stylesheet" href="css/privacidad.css">
++  <link rel="stylesheet" href="css/paginas.css">
++</head>
++<body>
++  <div class="container">
++    <h1>Directorio de farmacias de Mar del Plata</h1>
++
++    <p>Listado de las farmacias de la ciudad con su dirección y teléfono. Para ver cuáles están de turno hoy, andá a la <a href="/">página principal</a>; para entender cómo rota el turno, leé <a href="como-funciona.html">cómo funcionan los turnos</a>.</p>
++
++    <!-- DIRECTORIO:INICIO -->
++    <p class="dir-total"><strong>172</strong> farmacias registradas, ordenadas alfabéticamente.</p>
++    <nav class="dir-indice" aria-label="Ir a la letra">
++      <a href="#letra-A">A</a>
++      <a href="#letra-B">B</a>
++      <a href="#letra-C">C</a>
++      <a href="#letra-D">D</a>
++      <a href="#letra-E">E</a>
++      <a href="#letra-F">F</a>
++      <a href="#letra-G">G</a>
++      <a href="#letra-H">H</a>
++      <a href="#letra-I">I</a>
++      <a href="#letra-J">J</a>
++      <a href="#letra-L">L</a>
++      <a href="#letra-M">M</a>
++      <a href="#letra-N">N</a>
++      <a href="#letra-O">O</a>
++      <a href="#letra-P">P</a>
++      <a href="#letra-R">R</a>
++      <a href="#letra-S">S</a>
++      <a href="#letra-T">T</a>
++      <a href="#letra-V">V</a>
++      <a href="#letra-Z">Z</a>
++    </nav>
++    <h2 class="dir-letra" id="letra-A">A</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">A.M.E.C.C.O.</span><span class="dir-dato">Independencia 2243</span><a href="tel:2234914886">2234914886</a></li>
++        <li><span class="dir-nombre">ABALLAY</span><span class="dir-dato">PERALTA RAMOS 821</span><a href="tel:2234815223">2234815223</a></li>
++        <li><span class="dir-nombre">AMANCAY</span><span class="dir-dato">11 DE SEPTIEMBRE 3783</span><a href="tel:2234388059">2234388059</a></li>
++        <li><span class="dir-nombre">AMANCAY</span><span class="dir-dato">Independencia 514</span><a href="tel:2235276015">2235276015</a></li>
++        <li><span class="dir-nombre">AMOF CENTRO</span><span class="dir-dato">Santiago del Estero 1745</span><a href="tel:2234931338">2234931338</a></li>
++        <li><span class="dir-nombre">AMOF JUAN B. JUSTO</span><span class="dir-dato">San Luis 4580</span><a href="tel:2234917979">2234917979</a></li>
++        <li><span class="dir-nombre">ARANDA</span><span class="dir-dato">LIBERTAD 5579</span><a href="tel:2234750052">2234750052</a></li>
++        <li><span class="dir-nombre">ARNAS</span><span class="dir-dato">CHILE 2987</span><a href="tel:2234814382">2234814382</a></li>
++        <li><span class="dir-nombre">AVENIDA</span><span class="dir-dato">LIBERTAD 4490</span><a href="tel:2234735863">2234735863</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-B">B</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">BADAMAR</span><span class="dir-dato">COLON 1399</span><a href="tel:2234515104">2234515104</a></li>
++        <li><span class="dir-nombre">BADANEZ</span><span class="dir-dato">SAN MARTIN 2149</span><a href="tel:2235510731">2235510731</a></li>
++        <li><span class="dir-nombre">BARRIO BELGRANO</span><span class="dir-dato">TRIPULANTES DEL FOURNIER 11012</span><a href="tel:2234653547">2234653547</a></li>
++        <li><span class="dir-nombre">BAUZA ALEM</span><span class="dir-dato">ALEM 3565</span><a href="tel:2234864449">2234864449</a></li>
++        <li><span class="dir-nombre">BAUZA GÜEMES</span><span class="dir-dato">GÜEMES 3185</span><a href="tel:2234518563">2234518563</a></li>
++        <li><span class="dir-nombre">BAUZA LURO</span><span class="dir-dato">LURO 3499</span><a href="tel:2234730287">2234730287</a></li>
++        <li><span class="dir-nombre">BAUZA LURO</span><span class="dir-dato">LURO 3219</span><a href="tel:2234916427">2234916427</a></li>
++        <li><span class="dir-nombre">BAUZA M. BRAVO</span><span class="dir-dato">MARIO BRAVO 3504</span><a href="tel:2235798821">2235798821</a></li>
++        <li><span class="dir-nombre">BAUZA SARMIENTO</span><span class="dir-dato">SARMIENTO 2599</span><a href="tel:2234511243">2234511243</a></li>
++        <li><span class="dir-nombre">BORONAT</span><span class="dir-dato">Tucumán 2402</span><a href="tel:2234951505">2234951505</a></li>
++        <li><span class="dir-nombre">BOSQUE GRANDE</span><span class="dir-dato">VERTIZ 9162</span><a href="tel:2236008877">2236008877</a></li>
++        <li><span class="dir-nombre">BUSTOS</span><span class="dir-dato">MATHEU 3673</span><a href="tel:2234724031">2234724031</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-C">C</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">CARRIZO</span><span class="dir-dato">RUTA NACIONAL 226 KM 16.5, EL COYUNCO</span><a href="tel:2235464734">2235464734</a></li>
++        <li><span class="dir-nombre">CASTORINA</span><span class="dir-dato">FORTUNATO DE LA PLAZA 2657</span><a href="tel:2235736459">2235736459</a></li>
++        <li><span class="dir-nombre">CECILIA PEREIRA</span><span class="dir-dato">LURO 4824</span><a href="tel:2234760001">2234760001</a></li>
++        <li><span class="dir-nombre">COMUFARMA</span><span class="dir-dato">RODRIGUEZ PEÑA 6628</span><a href="tel:2236285899">2236285899</a></li>
++        <li><span class="dir-nombre">CONSTITUCION CANESSA</span><span class="dir-dato">JUAN B. JUSTO 494</span><a href="tel:2234801616">2234801616</a></li>
++        <li><span class="dir-nombre">CONSTITUCION LASSALLE</span><span class="dir-dato">CONSTITUCION 6995</span><a href="tel:2234716464">2234716464</a></li>
++        <li><span class="dir-nombre">CONSTITUCION LURO</span><span class="dir-dato">LURO 7498</span><a href="tel:2233467859">2233467859</a></li>
++        <li><span class="dir-nombre">CONSTUCION PINOS DE ANCHORENA</span><span class="dir-dato">CONSTITUCION 6039</span><a href="tel:2234793333">2234793333</a></li>
++        <li><span class="dir-nombre">COPAL</span><span class="dir-dato">SAN JUAN 2998</span><a href="tel:2236532086">2236532086</a></li>
++        <li><span class="dir-nombre">CORAL</span><span class="dir-dato">INDEPENDENCIA 874</span><a href="tel:2234743111">2234743111</a></li>
++        <li><span class="dir-nombre">CUELLO</span><span class="dir-dato">CORONEL SUAREZ 468</span><a href="tel:2233424688">2233424688</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-D">D</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">D´ALESSANDRO</span><span class="dir-dato">LURO 9615</span><a href="tel:2234871651">2234871651</a></li>
++        <li><span class="dir-nombre">DANTE</span><span class="dir-dato">MORENO 3602</span><a href="tel:2234943337">2234943337</a></li>
++        <li><span class="dir-nombre">DEL AGUILA</span><span class="dir-dato">LURO 4610</span><a href="tel:2234721830">2234721830</a></li>
++        <li><span class="dir-nombre">DEL BARRIO</span><span class="dir-dato">JARA 3290</span><a href="tel:2234755685">2234755685</a></li>
++        <li><span class="dir-nombre">DEL CUETO</span><span class="dir-dato">12 DE OCTUBRE 5054</span><a href="tel:2234809713">2234809713</a></li>
++        <li><span class="dir-nombre">DEL INTERZONAL</span><span class="dir-dato">JUAN B. JUSTO 6404</span><a href="tel:2235599679">2235599679</a></li>
++        <li><span class="dir-nombre">DEL LABRADOR</span><span class="dir-dato">TUCUMAN 2853</span><a href="tel:2234913241">2234913241</a></li>
++        <li><span class="dir-nombre">DEL PUERTO</span><span class="dir-dato">12 DE OCTUBRE 3499</span><a href="tel:2234800271">2234800271</a></li>
++        <li><span class="dir-nombre">DEL PUERTO 12 DE OCTUBRE</span><span class="dir-dato">12 DE OCTUBRE 3185</span><a href="tel:2234895735">2234895735</a></li>
++        <li><span class="dir-nombre">DEL PUERTO INDEPENDENCIA</span><span class="dir-dato">INDEPENDENCIA 3802</span><a href="tel:2234755524">2234755524</a></li>
++        <li><span class="dir-nombre">DEL PUERTO LURO</span><span class="dir-dato">LURO 5802</span><a href="tel:2234783056">2234783056</a></li>
++        <li><span class="dir-nombre">DEL PUERTO P. RAMOS</span><span class="dir-dato">PERALTA RAMOS 402</span><a href="tel:2235577707">2235577707</a></li>
++        <li><span class="dir-nombre">DEL PUERTO TEJEDOR</span><span class="dir-dato">TEJEDOR 581</span><a href="tel:2234713066">2234713066</a></li>
++        <li><span class="dir-nombre">DELLA MAGGIORA</span><span class="dir-dato">COLON 4101</span><a href="tel:2234723587">2234723587</a></li>
++        <li><span class="dir-nombre">DOMINGUEZ LAY</span><span class="dir-dato">CARLOS TEJEDOR 3627</span><a href="tel:2234548666">2234548666</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-E">E</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">EDISON</span><span class="dir-dato">EDISON 1175</span><a href="tel:2236701400">2236701400</a></li>
++        <li><span class="dir-nombre">EDISON II</span><span class="dir-dato">EDISON 2601</span><a href="tel:2235353340">2235353340</a></li>
++        <li><span class="dir-nombre">EL GROSELLAR</span><span class="dir-dato">JOSE MANUEL ESTRADA 5610</span><a href="tel:2234562065">2234562065</a></li>
++        <li><span class="dir-nombre">EL GROSELLAR TEJEDOR</span><span class="dir-dato">CARLOS TEJEDOR 2618</span><a href="tel:2233123880">2233123880</a></li>
++        <li><span class="dir-nombre">ELBEY Y FARINA</span><span class="dir-dato">COLON 7279</span><a href="tel:2234702524">2234702524</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-F">F</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">FAILONI</span><span class="dir-dato">FELIX U. CAMET 123</span><a href="tel:2234736352">2234736352</a></li>
++        <li><span class="dir-nombre">FARMACIA GREMIAL A.M.U.P.E.</span><span class="dir-dato">Alberti 2639</span><a href="tel:2234951715">2234951715</a></li>
++        <li><span class="dir-nombre">FARMACIA GREMIAL O.S.A.R.P.Y.H.</span><span class="dir-dato">España 1555</span><a href="tel:2234734838">2234734838</a></li>
++        <li><span class="dir-nombre">FARMACIA GREMIAL S.E.C.Z.A.</span><span class="dir-dato">Independencia 1839</span><a href="tel:2234993700">2234993700</a></li>
++        <li><span class="dir-nombre">FARMACIA MUTUAL A.M.</span><span class="dir-dato">Buenos Aires 3155</span><a href="tel:2235304792">2235304792</a></li>
++        <li><span class="dir-nombre">FARMACIA MUTUAL METALÚRGICOS</span><span class="dir-dato">Independencia 1855</span><a href="tel:2234958492">2234958492</a></li>
++        <li><span class="dir-nombre">FARMACIA POLICIAL</span><span class="dir-dato">Fortunato de la Plaza 3237</span><a href="tel:2235550111">2235550111</a></li>
++        <li><span class="dir-nombre">FARMACIA SUR</span><span class="dir-dato">COLON 5398</span><a href="tel:2234748777">2234748777</a></li>
++        <li><span class="dir-nombre">FARMACITY</span><span class="dir-dato">Gascon 2899</span><a href="tel:2234328776">2234328776</a></li>
++        <li><span class="dir-nombre">FARMALYF</span><span class="dir-dato">INDEPENDENCIA 4117</span><a href="tel:2234726788">2234726788</a></li>
++        <li><span class="dir-nombre">FEBA</span><span class="dir-dato">COLON 9102</span><a href="tel:2234870670">2234870670</a></li>
++        <li><span class="dir-nombre">FERRANDO</span><span class="dir-dato">BALCARCE 2899</span><a href="tel:2234916617">2234916617</a></li>
++        <li><span class="dir-nombre">FLORES</span><span class="dir-dato">LURO 6501</span><a href="tel:2234813387">2234813387</a></li>
++        <li><span class="dir-nombre">FLORES PRADO</span><span class="dir-dato">BELTRAN 5688</span><a href="tel:2235313404">2235313404</a></li>
++        <li><span class="dir-nombre">FORMINI</span><span class="dir-dato">ALVARADO 5699</span><a href="tel:2234724494">2234724494</a></li>
++        <li><span class="dir-nombre">FRASSON</span><span class="dir-dato">ARTURO ALIO 1195</span><a href="tel:2234787253">2234787253</a></li>
++        <li><span class="dir-nombre">FRESCO</span><span class="dir-dato">CERRITO 1512</span><a href="tel:2236542256">2236542256</a></li>
++        <li><span class="dir-nombre">FRONTINI</span><span class="dir-dato">12 DE OCTUBRE 5362</span><a href="tel:2234820421">2234820421</a></li>
++        <li><span class="dir-nombre">FRONTINI</span><span class="dir-dato">JARA 42</span><a href="tel:2234711961">2234711961</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-G">G</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">GILARDONI</span><span class="dir-dato">0 Y 817 CHAPADMALAL</span><a href="tel:2291510527">2291510527</a></li>
++        <li><span class="dir-nombre">GOMEZ</span><span class="dir-dato">ALVARADO 2318</span><a href="tel:2236260034">2236260034</a></li>
++        <li><span class="dir-nombre">GOMEZ JBJ</span><span class="dir-dato">JUAN B. JUSTO 2278</span><a href="tel:2234827037">2234827037</a></li>
++        <li><span class="dir-nombre">GRIMALDI</span><span class="dir-dato">RODRIGUEZ PEÑA 1289</span><a href="tel:2233450267">2233450267</a></li>
++        <li><span class="dir-nombre">GUEVARA</span><span class="dir-dato">SAN JUAN 381</span><a href="tel:2234732109">2234732109</a></li>
++        <li><span class="dir-nombre">GUIDI</span><span class="dir-dato">RIVADAVIA 4466</span><a href="tel:2233044912">2233044912</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-H">H</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">HERRERO</span><span class="dir-dato">JARA 1842</span><a href="tel:2235847235">2235847235</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-I">I</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">ITALIANA</span><span class="dir-dato">20 de SEPTIEMBRE 1678</span><a href="tel:2234730178">2234730178</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-J">J</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">JARDIN DE LA SIERRA</span><span class="dir-dato">ARGENTINA 360</span><a href="tel:2234370421">2234370421</a></li>
++        <li><span class="dir-nombre">JARDIN DEL BOSQUE</span><span class="dir-dato">MARIO BRAVO 2674</span><a href="tel:2235244020">2235244020</a></li>
++        <li><span class="dir-nombre">JORGE RUIZ</span><span class="dir-dato">JARA 1407</span><a href="tel:2234729609">2234729609</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-L">L</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">LA PERLA</span><span class="dir-dato">ESPAÑA 1003</span><a href="tel:2235065049">2235065049</a></li>
++        <li><span class="dir-nombre">LAS HERAS</span><span class="dir-dato">CALABRIA 9131</span><a href="tel:2236283542">2236283542</a></li>
++        <li><span class="dir-nombre">LISSARRAGUE</span><span class="dir-dato">AYACUCHO 4698</span><a href="tel:2236774797">2236774797</a></li>
++        <li><span class="dir-nombre">LIZALDE</span><span class="dir-dato">TEJEDOR 2156</span><a href="tel:2236024116">2236024116</a></li>
++        <li><span class="dir-nombre">LOPEZ 25 DE MAYO</span><span class="dir-dato">25 DE MAYO 2999</span><a href="tel:2234951637">2234951637</a></li>
++        <li><span class="dir-nombre">LOPEZ PEÑA</span><span class="dir-dato">RODRIGUEZ PEÑA 2535</span><a href="tel:2234937823">2234937823</a></li>
++        <li><span class="dir-nombre">LOPEZ STROBEL</span><span class="dir-dato">STROBEL 5191</span><a href="tel:2234749549">2234749549</a></li>
++        <li><span class="dir-nombre">LUJAN</span><span class="dir-dato">FORTUNATO DE LA PLAZA 6992</span><a href="tel:2233465521">2233465521</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-M">M</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">MALEN</span><span class="dir-dato">CATAMARCA 3201</span><a href="tel:2234732646">2234732646</a></li>
++        <li><span class="dir-nombre">MARQUEZ</span><span class="dir-dato">JARA 936</span><a href="tel:2234758219">2234758219</a></li>
++        <li><span class="dir-nombre">MARTI</span><span class="dir-dato">TEODORO BRONZINI 597</span><a href="tel:2235023596">2235023596</a></li>
++        <li><span class="dir-nombre">MEDICI</span><span class="dir-dato">RAWSON 4197</span><a href="tel:2234728758">2234728758</a></li>
++        <li><span class="dir-nombre">MELUCCI</span><span class="dir-dato">LIBERTAD 4109</span><a href="tel:2234720605">2234720605</a></li>
++        <li><span class="dir-nombre">MILAZZO</span><span class="dir-dato">AV. FORTUNATO DE LA PLAZA 4332</span><a href="tel:2236920583">2236920583</a></li>
++        <li><span class="dir-nombre">MITRE</span><span class="dir-dato">COLON 2690</span><a href="tel:2235410471">2235410471</a></li>
++        <li><span class="dir-nombre">MOBILIA</span><span class="dir-dato">PRESIDENTE PERON 10419 BATAN</span><a href="tel:2236344967">2236344967</a></li>
++        <li><span class="dir-nombre">MOLINA</span><span class="dir-dato">SAN JUAN 1299</span><a href="tel:2234740039">2234740039</a></li>
++        <li><span class="dir-nombre">MONTTI</span><span class="dir-dato">TUCUMAN 3392</span><a href="tel:2235015346">2235015346</a></li>
++        <li><span class="dir-nombre">MURRAY</span><span class="dir-dato">BELGRANO 3302</span><a href="tel:2234956623">2234956623</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-N">N</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">NUEVA CONSTITUCION</span><span class="dir-dato">CONSTITUCION 6679</span><a href="tel:2234567991">2234567991</a></li>
++        <li><span class="dir-nombre">NUEVA CORDOBA</span><span class="dir-dato">CORDOBA 4546</span><a href="tel:2234941294">2234941294</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-O">O</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">OCCI</span><span class="dir-dato">TEJEDOR 298</span><a href="tel:2234728768">2234728768</a></li>
++        <li><span class="dir-nombre">OCCI JBJ</span><span class="dir-dato">JUAN B JUSTO 1302</span><a href="tel:2234809105">2234809105</a></li>
++        <li><span class="dir-nombre">OLIVERI</span><span class="dir-dato">LURO 4102</span><a href="tel:2235721444">2235721444</a></li>
++        <li><span class="dir-nombre">OMBRONI</span><span class="dir-dato">INDEPENDENCIA 3002</span><a href="tel:2233521496">2233521496</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-P">P</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">PALKIN FALUCHO</span><span class="dir-dato">FALUCHO 1602</span><a href="tel:2235193304">2235193304</a></li>
++        <li><span class="dir-nombre">PALKIN INDEPENDENCIA</span><span class="dir-dato">INDEPENDENCIA 3501</span><a href="tel:2235589900">2235589900</a></li>
++        <li><span class="dir-nombre">PAZ</span><span class="dir-dato">TALCAHUANO 793</span><a href="tel:2234823985">2234823985</a></li>
++        <li><span class="dir-nombre">PENNISI FORELL</span><span class="dir-dato">FORTUNATO DE LA PLAZA 3237</span><a href="tel:2236266333">2236266333</a></li>
++        <li><span class="dir-nombre">PEREIRA</span><span class="dir-dato">CONSTITUCION 4375</span><a href="tel:2234790001">2234790001</a></li>
++        <li><span class="dir-nombre">PHARMABEACH</span><span class="dir-dato">EDISON 1582</span><a href="tel:2235301393">2235301393</a></li>
++        <li><span class="dir-nombre">PHARMARURAL</span><span class="dir-dato">RUTA NACIONAL 226 KM 16.5, EL COYUNCO</span><a href="tel:2233540982">2233540982</a></li>
++        <li><span class="dir-nombre">PIROLA</span><span class="dir-dato">JUAN B. JUSTO 6736</span><a href="tel:2235393277">2235393277</a></li>
++        <li><span class="dir-nombre">PIZZOLO</span><span class="dir-dato">FORTUNATO DE LA PLAZA 3658</span><a href="tel:2236703020">2236703020</a></li>
++        <li><span class="dir-nombre">PIZZOLO MARIO BRAVO</span><span class="dir-dato">MARIO BRAVO 2067</span><a href="tel:2234841484">2234841484</a></li>
++        <li><span class="dir-nombre">PIZZOLO VERTIZ</span><span class="dir-dato">VERTIZ 4282</span><a href="tel:2235314718">2235314718</a></li>
++        <li><span class="dir-nombre">PLAZA</span><span class="dir-dato">CONSTITUCION 5702</span><a href="tel:2234715757">2234715757</a></li>
++        <li><span class="dir-nombre">POUSSET</span><span class="dir-dato">ALVARADO 6579</span><a href="tel:2234783427">2234783427</a></li>
++        <li><span class="dir-nombre">PREMEDICA</span><span class="dir-dato">RICARDO BALBIN 2399, BATAN</span><a href="tel:2233777777">2233777777</a></li>
++        <li><span class="dir-nombre">PREVILEY 12 DE OCTUBRE</span><span class="dir-dato">12 DE OCTUBRE 3792</span><a href="tel:2235449668">2235449668</a></li>
++        <li><span class="dir-nombre">PREVILEY F. DE LA PLAZA</span><span class="dir-dato">FORTUNATO DE LA PLAZA 5120</span><a href="tel:2233541521">2233541521</a></li>
++        <li><span class="dir-nombre">PREVILEY LURO</span><span class="dir-dato">LURO 3804</span><a href="tel:2235767649">2235767649</a></li>
++        <li><span class="dir-nombre">PREVILEY P. RAMOS</span><span class="dir-dato">PERALTA RAMOS 2413</span><a href="tel:2235064692">2235064692</a></li>
++        <li><span class="dir-nombre">PREVILEY SAN MARTIN</span><span class="dir-dato">SAN MARTIN 5521</span><a href="tel:2233413929">2233413929</a></li>
++        <li><span class="dir-nombre">PREVILEY TALCAHUANO</span><span class="dir-dato">TALCAHUANO 2002</span><a href="tel:2235422050">2235422050</a></li>
++        <li><span class="dir-nombre">PUEYREDON PERALTA RAMOS</span><span class="dir-dato">JACINTO PERALTA RAMOS 11</span><a href="tel:2235648000">2235648000</a></li>
++        <li><span class="dir-nombre">PUEYRREDON CORDOBA</span><span class="dir-dato">CORDOBA 3869</span><a href="tel:2234920020">2234920020</a></li>
++        <li><span class="dir-nombre">PUEYRREDON JBJ</span><span class="dir-dato">JUAN B. JUSTO 1846</span><a href="tel:2234894040">2234894040</a></li>
++        <li><span class="dir-nombre">PUEYRREDON JBJ II</span><span class="dir-dato">JUAN B. JUSTO 1601</span><a href="tel:2234805295">2234805295</a></li>
++        <li><span class="dir-nombre">PUEYRREDON LAS HERAS</span><span class="dir-dato">LAS HERAS 3010</span><a href="tel:2234939265">2234939265</a></li>
++        <li><span class="dir-nombre">PUEYRREDON TALCAHUANO</span><span class="dir-dato">TALCAHUANO 399</span><a href="tel:2234822039">2234822039</a></li>
++        <li><span class="dir-nombre">PURAFARMA</span><span class="dir-dato">Alsina 3307</span><a href="tel:2235706060">2235706060</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-R">R</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">RIADIGOS ALEM</span><span class="dir-dato">ALEM 3777</span><a href="tel:2236962133">2236962133</a></li>
++        <li><span class="dir-nombre">RIADIGOS CARREFOUR</span><span class="dir-dato">CONSTITUCION 7508</span><a href="tel:2234712727">2234712727</a></li>
++        <li><span class="dir-nombre">RIADIGOS CASTELLI</span><span class="dir-dato">CASTELLI 1311</span><a href="tel:2234518537">2234518537</a></li>
++        <li><span class="dir-nombre">RIADIGOS CONSTITUCION</span><span class="dir-dato">CONSTITUCION 4793</span><a href="tel:2234713000">2234713000</a></li>
++        <li><span class="dir-nombre">RIADIGOS GÜEMES</span><span class="dir-dato">GASCON 1299</span><a href="tel:2233522656">2233522656</a></li>
++        <li><span class="dir-nombre">RIADIGOS JBJ</span><span class="dir-dato">JUAN B. JUSTO 2600</span><a href="tel:2234953022">2234953022</a></li>
++        <li><span class="dir-nombre">RIADIGOS LURO</span><span class="dir-dato">LURO 6900</span><a href="tel:2235401424">2235401424</a></li>
++        <li><span class="dir-nombre">RIADIGOS MOGOTES</span><span class="dir-dato">SICILIA 1474</span><a href="tel:2234840713">2234840713</a></li>
++        <li><span class="dir-nombre">RIQUELME</span><span class="dir-dato">20 DE SEPTIEMBRE 399</span><a href="tel:2233475520">2233475520</a></li>
++        <li><span class="dir-nombre">RODRIGUEZ</span><span class="dir-dato">JARA 2598</span><a href="tel:2235160637">2235160637</a></li>
++        <li><span class="dir-nombre">RODRIGUEZ SUSANA</span><span class="dir-dato">DELLA PAOLERA 2040</span><a href="tel:2236695468">2236695468</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-S">S</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">S.U.M.A.</span><span class="dir-dato">Funes 3187</span><a href="tel:2234761369">2234761369</a></li>
++        <li><span class="dir-nombre">SACK</span><span class="dir-dato">ALBERTI 6567</span><a href="tel:2235993771">2235993771</a></li>
++        <li><span class="dir-nombre">SAN JOSE</span><span class="dir-dato">PUAN 1712</span><a href="tel:2234840213">2234840213</a></li>
++        <li><span class="dir-nombre">SAN JUAN</span><span class="dir-dato">BELGRANO 4250</span><a href="tel:2234725920">2234725920</a></li>
++        <li><span class="dir-nombre">SAN RAFAEL</span><span class="dir-dato">PERALTA RAMOS 1099</span><a href="tel:2234817471">2234817471</a></li>
++        <li><span class="dir-nombre">SANTICH</span><span class="dir-dato">FORTUNATO DE LA PLAZA 6304</span><a href="tel:2235362678">2235362678</a></li>
++        <li><span class="dir-nombre">SE.AD.HE</span><span class="dir-dato">JUAN B. JUSTO 5402</span><a href="tel:2236933753">2236933753</a></li>
++        <li><span class="dir-nombre">SENA</span><span class="dir-dato">PATRICIO PERALTA RAMOS 3987</span><a href="tel:2234510422">2234510422</a></li>
++        <li><span class="dir-nombre">SERI</span><span class="dir-dato">SAN JUAN 702</span><a href="tel:2233528606">2233528606</a></li>
++        <li><span class="dir-nombre">SIMINI</span><span class="dir-dato">CERRITO 285</span><a href="tel:2233530938">2233530938</a></li>
++        <li><span class="dir-nombre">SOICH PERALTA RAMOS</span><span class="dir-dato">JACINTO PERALTA RAMOS 2101</span><a href="tel:2236910038">2236910038</a></li>
++        <li><span class="dir-nombre">STECKINGER</span><span class="dir-dato">RODRIGUEZ PEÑA 4727</span><a href="tel:2234721994">2234721994</a></li>
++        <li><span class="dir-nombre">STOLAR</span><span class="dir-dato">ALBERTI 6001</span><a href="tel:2234774811">2234774811</a></li>
++        <li><span class="dir-nombre">SUR</span><span class="dir-dato">MARIO BRAVO 502</span><a href="tel:2236185741">2236185741</a></li>
++        <li><span class="dir-nombre">SUR COLON</span><span class="dir-dato">COLON 4986</span><a href="tel:2234727980">2234727980</a></li>
++        <li><span class="dir-nombre">SUR COLON II</span><span class="dir-dato">COLON 6699</span><a href="tel:2236865638">2236865638</a></li>
++        <li><span class="dir-nombre">SZPYRNAL</span><span class="dir-dato">RODRIGUEZ PEÑA 3695</span><a href="tel:2234763940">2234763940</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-T">T</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">TELLERIA</span><span class="dir-dato">FORTUNATO DE LA PLAZA 4583</span><a href="tel:2236769086">2236769086</a></li>
++        <li><span class="dir-nombre">TROZZI</span><span class="dir-dato">PERALTA RAMOS 1701</span><a href="tel:2233008488">2233008488</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-V">V</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">VALENTINI</span><span class="dir-dato">JARA 3993</span><a href="tel:2234744588">2234744588</a></li>
++        <li><span class="dir-nombre">VARA</span><span class="dir-dato">DIAGONAL ESTADOS UNIDOS 779</span><a href="tel:2235808030">2235808030</a></li>
++        <li><span class="dir-nombre">VIDA</span><span class="dir-dato">CONSTITUCION 5232</span><a href="tel:2234790101">2234790101</a></li>
++        <li><span class="dir-nombre">VIDELA</span><span class="dir-dato">18 262 CHAPADMALAL</span><a href="tel:2233545778">2233545778</a></li>
++        <li><span class="dir-nombre">VILLEGAS</span><span class="dir-dato">SAN JUAN 15</span><a href="tel:2234739489">2234739489</a></li>
++        <li><span class="dir-nombre">VITA</span><span class="dir-dato">TEODORO BRONZINI 210</span><a href="tel:2235033528">2235033528</a></li>
++    </ul>
++    <h2 class="dir-letra" id="letra-Z">Z</h2>
++    <ul class="dir-lista">
++        <li><span class="dir-nombre">ZINGALE</span><span class="dir-dato">LIBERTAD 7693</span><a href="tel:2235399462">2235399462</a></li>
++        <li><span class="dir-nombre">ZUICH</span><span class="dir-dato">ALBERTI 1387</span><a href="tel:2234860599">2234860599</a></li>
++    </ul>
++    <!-- DIRECTORIO:FIN -->
++
++    <hr>
++
++    <div style="text-align: center; margin: 30px 0 20px;">
++      <a href="/" class="btn-volver-app">← Volver a la aplicación</a>
++    </div>
++
++    <footer class="footer">
++      <p><span class="code-symbol">&lt;/&gt;</span> Desarrollado por <a href="mailto:pablo.s.bella@gmail.com?subject=Web%20Farmacias">Pablo Bella</a> con 💚</p>
++      <p>
++        <a href="como-funciona.html">Cómo funcionan los turnos</a> ·
++        <a href="farmacias.html">Directorio de farmacias</a> ·
++        <a href="privacidad.html">Política de Privacidad</a> ·
++        <a href="terminos.html">Términos y Condiciones</a> ·
++        <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener noreferrer">CC BY-NC 4.0</a>
++      </p>
++    </footer>
++  </div>
++
++<script src="js/legal-theme.js"></script>
++</body>
++</html>
+diff --git a/index.html b/index.html
+index 5805209..ec1c778 100644
+--- a/index.html
++++ b/index.html
+@@ -172,74 +172,12 @@
+       </a>
+ 
+       <div id="lista" aria-live="polite">
+-        <div class="card">
+-          <div class="card-num">01</div>
+-          <div class="card-info">
+-            <div class="card-name">MITRE</div>
+-            <div class="card-address"><span class="icon-location"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="var(--accent)"/><circle cx="12" cy="9" r="3" fill="white"/></svg></span> COLON 2690</div>
+-          </div>
+-          <div class="card-phone"><a href="tel:2235410471" class="phone-link"><span class="icon-phone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="var(--accent)"/></svg></span> 2235410471</a></div>
+-        </div>
+-        <div class="card">
+-          <div class="card-num">02</div>
+-          <div class="card-info">
+-            <div class="card-name">DEL PUERTO</div>
+-            <div class="card-address"><span class="icon-location"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="var(--accent)"/><circle cx="12" cy="9" r="3" fill="white"/></svg></span> 12 DE OCTUBRE 3499</div>
+-          </div>
+-          <div class="card-phone"><a href="tel:2234800271" class="phone-link"><span class="icon-phone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="var(--accent)"/></svg></span> 2234800271</a></div>
++          <div class="card" id="cargando">Cargando farmacias de turno…</div>
+         </div>
+-      </div>
+     </div>
+     <div class="col-map">
+       <div id="map-desktop"></div>
+     </div>
+-
+-    <div id="static-content" style="position: absolute; left: -9999px;" aria-hidden="true">
+-        <h2>Farmacias de Turno en Mar del Plata</h2>
+-        <p>Directorio actualizado diariamente de farmacias de turno en Mar del Plata. Consultá qué farmacia está de turno hoy con dirección, teléfono y mapa interactivo. Información basada en la rotación oficial del Colegio de Farmacéuticos de General Pueyrredon.</p>
+-        
+-        <h3>Farmacias de turno frecuentes</h3>
+-        <ul>
+-            <li><strong>Farmacia MITRE</strong> - COLON 2690 - Tel: 2235410471</li>
+-            <li><strong>Farmacia DEL PUERTO</strong> - 12 DE OCTUBRE 3499 - Tel: 2234800271</li>
+-            <li><strong>Farmacia PUEYRREDON</strong> - JUAN B. JUSTO 3200 - Tel: 2235648000</li>
+-            <li><strong>Farmacia BAUZA</strong> - LURO 3499 - Tel: 2234730287</li>
+-            <li><strong>Farmacia DEL AGUILA</strong> - LURO 4610 - Tel: 2234721830</li>
+-            <li><strong>Farmacia AVENIDA</strong> - LIBERTAD 4490 - Tel: 2234735863</li>
+-            <li><strong>Farmacia 25 DE MAYO</strong> - 25 DE MAYO 3610 - Tel: 2236410479</li>
+-            <li><strong>Farmacia ABALLAY</strong> - PERALTA RAMOS 821 - Tel: 2234815223</li>
+-            <li><strong>Farmacia FRONTINI</strong> - 12 DE OCTUBRE 5362 - Tel: 2234820421</li>
+-            <li><strong>Farmacia BADAMAR</strong> - COLON 1399 - Tel: 2234515104</li>
+-            <li><strong>Farmacia DEL BARRIO</strong> - JARA 3290 - Tel: 2234755685</li>
+-            <li><strong>Farmacia CORAL</strong> - INDEPENDENCIA 874 - Tel: 2234743111</li>
+-        </ul>
+-
+-        <h3>Zonas cubiertas</h3>
+-        <p>Centro, Puerto, Playa Grande, Constitución, Peralta Ramos, Güemes, Colon, Juan B. Justo, Libertad, Fortunato de la Plaza, Batan, Chapadmalal, El Coyunco, Sierra de los Padres.</p>
+-
+-        <h3>Características del servicio</h3>
+-        <ul>
+-            <li>Rotación oficial de 16 grupos farmacéuticos</li>
+-            <li>Actualización automática diaria a las 9:00 AM</li>
+-            <li>Mapa interactivo con ubicación de cada farmacia</li>
+-            <li>Disponible sin conexión a internet (PWA)</li>
+-            <li>Compatible con celulares, tablets y computadoras</li>
+-            <li>Modo claro y oscuro automático</li>
+-            <li>Servicio gratuito y sin publicidad invasiva</li>
+-        </ul>
+-
+-        <h3>Horarios de atención</h3>
+-        <p>Las farmacias de turno atienden desde las 9:00 AM del día indicado hasta las 9:00 AM del día siguiente, incluyendo fines de semana y feriados.</p>
+-
+-        <h3>Teléfonos útiles</h3>
+-        <ul>
+-            <li>Colegio de Farmacéuticos de Gral. Pueyrredon: (0223) 474-0039</li>
+-            <li>Emergencias médicas: 107</li>
+-        </ul>
+-
+-        <h3>Contacto</h3>
+-        <p>Desarrollado por Pablo Bella. Para correcciones o agregar tu farmacia: pablo.s.bella@gmail.com</p>
+-    </div>
+ </main>
+ 
+   <div class="map-sheet" id="mapSheet">
+@@ -289,7 +227,41 @@
+     </div>
+   </div>
+ 
+-    <footer class="footer">
++    <section id="static-content" class="info-section">
++  <h2>Farmacias de turno en Mar del Plata</h2>
++  <p>Directorio de farmacias de turno en Mar del Plata, con dirección, teléfono y mapa interactivo. El turno se calcula a partir de la rotación del Colegio de Farmacéuticos de General Pueyrredon, que organiza las farmacias en 16 grupos. Para ver el detalle de cómo se calcula, leé <a href="como-funciona.html">cómo funcionan los turnos</a>.</p>
++
++  <h3>Todas las farmacias</h3>
++  <p>La farmacia MITRE (Colón 2690) figura en los 16 grupos, por lo que está de turno todos los días. Para el resto, consultá el <a href="farmacias.html">directorio completo de farmacias</a>, ordenado alfabéticamente, o tocá «Ver todas» en esta página.</p>
++
++  <h3>Zonas cubiertas</h3>
++  <p>Centro, Puerto, Playa Grande, Constitución, Peralta Ramos, Güemes, Colón, Juan B. Justo, Libertad, Fortunato de la Plaza, Batán, Chapadmalal, El Coyunco, Sierra de los Padres.</p>
++
++  <h3>Características del servicio</h3>
++  <ul>
++    <li>Rotación de 16 grupos farmacéuticos</li>
++    <li>Actualización automática diaria a las 9:00</li>
++    <li>Mapa interactivo con la ubicación de cada farmacia</li>
++    <li>Funciona sin conexión una vez cargada (PWA)</li>
++    <li>Compatible con celulares, tablets y computadoras</li>
++    <li>Modo claro y oscuro</li>
++    <li>Servicio gratuito</li>
++  </ul>
++
++  <h3>Horarios de atención</h3>
++  <p>Las farmacias de turno atienden desde las 9:00 del día indicado hasta las 9:00 del día siguiente, incluyendo fines de semana y feriados.</p>
++
++  <h3>Teléfonos útiles</h3>
++  <ul>
++    <li>Colegio de Farmacéuticos de Gral. Pueyrredon: (0223) 474-0039</li>
++    <li>Emergencias médicas: 107</li>
++  </ul>
++
++  <h3>Contacto</h3>
++  <p>Desarrollado por Pablo Bella. Para correcciones o para agregar tu farmacia: <a href="mailto:pablo.s.bella@gmail.com?subject=Web%20Farmacias">pablo.s.bella@gmail.com</a></p>
++</section>
++
++<footer class="footer">
+     <div class="footer-grid">
+       <div class="footer-brand">
+         <div class="footer-brand__logo">
+@@ -305,7 +277,9 @@
+       </div>
+ 
+       <div class="footer-col">
+-        <span class="footer-col__title">Legal</span>
++        <span class="footer-col__title">Información</span>
++        <a href="como-funciona.html">Cómo funcionan los turnos</a>
++        <a href="farmacias.html">Directorio de farmacias</a>
+         <a href="privacidad.html">Política de Privacidad</a>
+         <a href="terminos.html">Términos y Condiciones</a>
+         <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener noreferrer">CC BY-NC 4.0</a>
+diff --git a/package.json b/package.json
+index 8d2d5dc..8af4f46 100644
+--- a/package.json
++++ b/package.json
+@@ -5,6 +5,7 @@
+   "description": "Farmacias de turno en Mar del Plata — PWA estática sin dependencias.",
+   "type": "module",
+   "scripts": {
+-    "test": "node --test tests/*.test.mjs"
++    "test": "node --test tests/*.test.mjs",
++    "directorio": "node scripts/directorio.mjs"
+   }
+ }
+diff --git a/privacidad.html b/privacidad.html
+index bd34a7e..8c6ed3b 100644
+--- a/privacidad.html
++++ b/privacidad.html
+@@ -80,6 +80,8 @@
+       <footer class="footer">
+     <p><span class="code-symbol">&lt;/&gt;</span> Desarrollado por <a href="mailto:pablo.s.bella@gmail.com?subject=Web%20Farmacias">Pablo Bella</a> con 💚</p>
+     <p>
++      <a href="como-funciona.html">Cómo funcionan los turnos</a> · 
++      <a href="farmacias.html">Directorio de farmacias</a> · 
+       <a href="privacidad.html">Política de Privacidad</a> · 
+       <a href="terminos.html">Términos y Condiciones</a> · 
+       <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a>
+diff --git a/scripts/directorio.mjs b/scripts/directorio.mjs
+new file mode 100644
+index 0000000..587deb0
+--- /dev/null
++++ b/scripts/directorio.mjs
+@@ -0,0 +1,72 @@
++// Genera la lista de farmacias.html a partir de db.json.
++//
++// Uso:  npm run directorio   (reescribe solo lo que está entre los marcadores
++// DIRECTORIO:INICIO / DIRECTORIO:FIN de farmacias.html; el resto es HTML a mano).
++// Hay que correrlo cada vez que cambie nombre, dirección o teléfono en db.json;
++// tests/directorio.test.mjs falla en CI si farmacias.html quedó desactualizado.
++import { readFileSync, writeFileSync } from 'node:fs';
++import { resolve } from 'node:path';
++import { fileURLToPath } from 'node:url';
++import { escapeHtml } from '../js/escape.js';
++import { limpiarTelefono } from '../js/data.js';
++
++const INICIO = '<!-- DIRECTORIO:INICIO -->';
++const FIN = '<!-- DIRECTORIO:FIN -->';
++
++// Mismo criterio de unicidad que "Ver todas" en js/ui.js: nombre + dirección.
++export function farmaciasUnicas(db) {
++  const mapa = new Map();
++  for (const lista of Object.values(db)) {
++    if (!Array.isArray(lista)) continue;
++    for (const f of lista) {
++      const clave = `${f.nombre}|${f.direccion}`;
++      if (!mapa.has(clave)) mapa.set(clave, f);
++    }
++  }
++  return [...mapa.values()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
++}
++
++function letraDe(nombre) {
++  const l = nombre.normalize('NFD').replace(/[\u0300-\u036f]/g, '').charAt(0).toUpperCase();
++  return /[A-Z]/.test(l) ? l : '#';
++}
++
++export function generarBloque(db) {
++  const todas = farmaciasUnicas(db);
++  const porLetra = new Map();
++  for (const f of todas) {
++    const l = letraDe(f.nombre);
++    if (!porLetra.has(l)) porLetra.set(l, []);
++    porLetra.get(l).push(f);
++  }
++  const id = (l) => (l === '#' ? 'letra-num' : `letra-${l}`);
++  const indice = [...porLetra.keys()].map((l) => `<a href="#${id(l)}">${l}</a>`).join('\n      ');
++  const secciones = [...porLetra].map(([l, lista]) => {
++    const items = lista.map((f) => {
++      const tel = limpiarTelefono(f.telefono);
++      const telHtml = tel
++        ? `<a href="tel:${escapeHtml(tel)}">${escapeHtml(f.telefono)}</a>`
++        : '<span class="dir-dato">Sin teléfono</span>';
++      return `        <li><span class="dir-nombre">${escapeHtml(f.nombre)}</span><span class="dir-dato">${escapeHtml(f.direccion)}</span>${telHtml}</li>`;
++    }).join('\n');
++    return `    <h2 class="dir-letra" id="${id(l)}">${l}</h2>\n    <ul class="dir-lista">\n${items}\n    </ul>`;
++  }).join('\n');
++
++  return `    <p class="dir-total"><strong>${todas.length}</strong> farmacias registradas, ordenadas alfabéticamente.</p>\n    <nav class="dir-indice" aria-label="Ir a la letra">\n      ${indice}\n    </nav>\n${secciones}`;
++}
++
++export function aplicarBloque(html, bloque) {
++  const i = html.indexOf(INICIO);
++  const j = html.indexOf(FIN);
++  if (i < 0 || j < i) throw new Error('Faltan los marcadores DIRECTORIO:INICIO / DIRECTORIO:FIN en farmacias.html');
++  return `${html.slice(0, i + INICIO.length)}\n${bloque}\n    ${html.slice(j)}`;
++}
++
++if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
++  const raiz = new URL('../', import.meta.url);
++  const db = JSON.parse(readFileSync(new URL('db.json', raiz), 'utf8'));
++  const ruta = new URL('farmacias.html', raiz);
++  const actual = readFileSync(ruta, 'utf8').replace(/\r\n/g, '\n');
++  writeFileSync(ruta, aplicarBloque(actual, generarBloque(db)));
++  console.log(`farmacias.html actualizado: ${farmaciasUnicas(db).length} farmacias`);
++}
+diff --git a/sitemap.xml b/sitemap.xml
+index 2326703..5c4e8f1 100644
+--- a/sitemap.xml
++++ b/sitemap.xml
+@@ -2,10 +2,22 @@
+ <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+   <url>
+     <loc>https://farmaciasmdp.com.ar/</loc>
+-    <lastmod>2026-05-01</lastmod>
++    <lastmod>2026-10-21</lastmod>
+     <changefreq>daily</changefreq>
+     <priority>1.0</priority>
+   </url>
++  <url>
++    <loc>https://farmaciasmdp.com.ar/como-funciona.html</loc>
++    <lastmod>2026-10-21</lastmod>
++    <changefreq>monthly</changefreq>
++    <priority>0.6</priority>
++  </url>
++  <url>
++    <loc>https://farmaciasmdp.com.ar/farmacias.html</loc>
++    <lastmod>2026-10-21</lastmod>
++    <changefreq>monthly</changefreq>
++    <priority>0.6</priority>
++  </url>
+   <url>
+     <loc>https://farmaciasmdp.com.ar/privacidad.html</loc>
+     <lastmod>2026-05-01</lastmod>
+diff --git a/sw.js b/sw.js
+index 513098d..c373d9f 100644
+--- a/sw.js
++++ b/sw.js
+@@ -1,4 +1,4 @@
+-const CACHE_NAME = 'farmaturnos-v17';
++const CACHE_NAME = 'farmaturnos-v18';
+ const urls = [
+   '/',
+   '/index.html',
+@@ -6,6 +6,8 @@ const urls = [
+   '/config.json',
+   '/privacidad.html',
+   '/terminos.html',
++  '/como-funciona.html',
++  '/farmacias.html',
+   '/css/base.css',
+   '/css/header.css',
+   '/css/layout.css',
+@@ -18,6 +20,7 @@ const urls = [
+   '/css/banner.css',
+   '/css/privacidad.css',
+   '/css/terminos.css',
++  '/css/paginas.css',
+   '/js/main.js',
+   '/js/config.js',
+   '/js/data.js',
+diff --git a/terminos.html b/terminos.html
+index 8526fcb..2ef6444 100644
+--- a/terminos.html
++++ b/terminos.html
+@@ -78,6 +78,8 @@
+   <footer class="footer">
+     <p><span class="code-symbol">&lt;/&gt;</span> Desarrollado por <a href="mailto:pablo.s.bella@gmail.com?subject=Web%20Farmacias">Pablo Bella</a> con 💚</p>
+     <p>
++      <a href="como-funciona.html">Cómo funcionan los turnos</a> · 
++      <a href="farmacias.html">Directorio de farmacias</a> · 
+       <a href="privacidad.html">Política de Privacidad</a> · 
+       <a href="terminos.html">Términos y Condiciones</a> · 
+       <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a>
+diff --git a/tests/directorio.test.mjs b/tests/directorio.test.mjs
+new file mode 100644
+index 0000000..b9f013e
+--- /dev/null
++++ b/tests/directorio.test.mjs
+@@ -0,0 +1,22 @@
++// farmacias.html se genera con `npm run directorio` a partir de db.json.
++// Si este test falla: correr `npm run directorio` y commitear farmacias.html.
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import { test } from 'node:test';
++import { aplicarBloque, farmaciasUnicas, generarBloque } from '../scripts/directorio.mjs';
++
++// Se normaliza CRLF -> LF: en Windows git puede entregar el archivo con CRLF.
++const leer = (ruta) => readFileSync(new URL(ruta, import.meta.url), 'utf8').replace(/\r\n/g, '\n');
++const db = JSON.parse(leer('../db.json'));
++
++test('farmacias.html está sincronizado con db.json', () => {
++  const html = leer('../farmacias.html');
++  assert.equal(aplicarBloque(html, generarBloque(db)), html);
++});
++
++test('el directorio no repite farmacias y todas tienen nombre y dirección', () => {
++  const todas = farmaciasUnicas(db);
++  assert.ok(todas.length > 0);
++  assert.ok(todas.every((f) => f.nombre && f.direccion));
++  assert.equal(new Set(todas.map((f) => `${f.nombre}|${f.direccion}`)).size, todas.length);
++});

@@ -88,10 +88,12 @@ graph TD
 
 ```
 farmaciasmdp/
-├── index.html                  # Entry point — contenido SSG para SEO + bootstrap JS
+├── index.html                  # Entry point — HTML con contenido informativo visible + bootstrap JS
 ├── admin-map.html              # Panel interno para auditar/editar coordenadas
 ├── privacidad.html             # Política de privacidad
 ├── terminos.html               # Términos de uso
+├── como-funciona.html          # Explicación de la rotación de 16 grupos y el cambio de turno
+├── farmacias.html              # Directorio completo (generado desde db.json, ver scripts/)
 │
 ├── config.json                 # Fecha ancla del ciclo
 │                                #   { "FECHA_INICIO_CICLO_1": "2026-04-25T09:00:00-03:00" }
@@ -104,7 +106,7 @@ farmaciasmdp/
 ├── css/                         # Estilos, un archivo por sección
 │   ├── base.css · header.css · layout.css · cards.css · maps.css
 │   ├── controls.css · footer.css · responsive.css · components.css
-│   ├── banner.css · privacidad.css · terminos.css · admin.css
+│   ├── banner.css · privacidad.css · terminos.css · paginas.css · admin.css
 │
 ├── js/                          # Lógica del sitio público, un módulo ES6 por responsabilidad
 │   ├── main.js                  # Entry point — orquesta todo lo demás
@@ -131,9 +133,13 @@ farmaciasmdp/
 │   ├── icon-16/32/48/96/128/192/512.png   # Íconos PWA en todos los tamaños
 │   └── icon-source.svg                     # Vector fuente de los íconos
 │
+├── scripts/
+│   └── directorio.mjs            # `npm run directorio`: regenera la lista de farmacias.html desde db.json
+│
 ├── tests/                        # Tests unitarios (node:test, sin dependencias)
 │   ├── ciclo.test.mjs             # Cálculo de rotación
 │   ├── github-serializer.test.mjs # Serialización de db.json del panel admin
+│   ├── directorio.test.mjs        # farmacias.html sincronizado con db.json
 │   └── README.md                  # Cómo correrlos y por qué hace falta fijar el TZ
 │
 ├── .github/workflows/tests.yml   # CI: corre npm test en cada push/PR
@@ -194,7 +200,8 @@ erDiagram
 
 **Notas sobre la calidad de los datos:**
 
-- `db.json` tiene 171 farmacias únicas (por nombre + dirección) repartidas en 16 grupos, más una clave `farmacias_extra` (13 entradas) fuera del ciclo rotativo.
+- `db.json` tiene 172 farmacias únicas (por nombre + dirección) repartidas en 16 grupos, e incluye una clave `farmacias_extra` (14 entradas) fuera del ciclo rotativo.
+- `farmacias.html` es HTML estático generado desde `db.json`. Si cambiás nombre, dirección o teléfono (a mano o desde el panel admin), corré `npm run directorio` y commiteá el resultado; si no, el test `directorio.test.mjs` falla en CI.
 - `MITRE (Colón 2690)` aparece en los 16 grupos — es farmacia de turno permanente.
 - La edición de coordenadas/datos se hace desde el [panel de administración](#panel-de-administración), no a mano.
 

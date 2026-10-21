@@ -172,73 +172,11 @@
       </a>
 
       <div id="lista" aria-live="polite">
-        <div class="card">
-          <div class="card-num">01</div>
-          <div class="card-info">
-            <div class="card-name">MITRE</div>
-            <div class="card-address"><span class="icon-location"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="var(--accent)"/><circle cx="12" cy="9" r="3" fill="white"/></svg></span> COLON 2690</div>
-          </div>
-          <div class="card-phone"><a href="tel:2235410471" class="phone-link"><span class="icon-phone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="var(--accent)"/></svg></span> 2235410471</a></div>
+          <div class="card" id="cargando">Cargando farmacias de turno…</div>
         </div>
-        <div class="card">
-          <div class="card-num">02</div>
-          <div class="card-info">
-            <div class="card-name">DEL PUERTO</div>
-            <div class="card-address"><span class="icon-location"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="var(--accent)"/><circle cx="12" cy="9" r="3" fill="white"/></svg></span> 12 DE OCTUBRE 3499</div>
-          </div>
-          <div class="card-phone"><a href="tel:2234800271" class="phone-link"><span class="icon-phone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="var(--accent)"/></svg></span> 2234800271</a></div>
-        </div>
-      </div>
     </div>
     <div class="col-map">
       <div id="map-desktop"></div>
-    </div>
-
-    <div id="static-content" style="position: absolute; left: -9999px;" aria-hidden="true">
-        <h2>Farmacias de Turno en Mar del Plata</h2>
-        <p>Directorio actualizado diariamente de farmacias de turno en Mar del Plata. Consultá qué farmacia está de turno hoy con dirección, teléfono y mapa interactivo. Información basada en la rotación oficial del Colegio de Farmacéuticos de General Pueyrredon.</p>
-        
-        <h3>Farmacias de turno frecuentes</h3>
-        <ul>
-            <li><strong>Farmacia MITRE</strong> - COLON 2690 - Tel: 2235410471</li>
-            <li><strong>Farmacia DEL PUERTO</strong> - 12 DE OCTUBRE 3499 - Tel: 2234800271</li>
-            <li><strong>Farmacia PUEYRREDON</strong> - JUAN B. JUSTO 3200 - Tel: 2235648000</li>
-            <li><strong>Farmacia BAUZA</strong> - LURO 3499 - Tel: 2234730287</li>
-            <li><strong>Farmacia DEL AGUILA</strong> - LURO 4610 - Tel: 2234721830</li>
-            <li><strong>Farmacia AVENIDA</strong> - LIBERTAD 4490 - Tel: 2234735863</li>
-            <li><strong>Farmacia 25 DE MAYO</strong> - 25 DE MAYO 3610 - Tel: 2236410479</li>
-            <li><strong>Farmacia ABALLAY</strong> - PERALTA RAMOS 821 - Tel: 2234815223</li>
-            <li><strong>Farmacia FRONTINI</strong> - 12 DE OCTUBRE 5362 - Tel: 2234820421</li>
-            <li><strong>Farmacia BADAMAR</strong> - COLON 1399 - Tel: 2234515104</li>
-            <li><strong>Farmacia DEL BARRIO</strong> - JARA 3290 - Tel: 2234755685</li>
-            <li><strong>Farmacia CORAL</strong> - INDEPENDENCIA 874 - Tel: 2234743111</li>
-        </ul>
-
-        <h3>Zonas cubiertas</h3>
-        <p>Centro, Puerto, Playa Grande, Constitución, Peralta Ramos, Güemes, Colon, Juan B. Justo, Libertad, Fortunato de la Plaza, Batan, Chapadmalal, El Coyunco, Sierra de los Padres.</p>
-
-        <h3>Características del servicio</h3>
-        <ul>
-            <li>Rotación oficial de 16 grupos farmacéuticos</li>
-            <li>Actualización automática diaria a las 9:00 AM</li>
-            <li>Mapa interactivo con ubicación de cada farmacia</li>
-            <li>Disponible sin conexión a internet (PWA)</li>
-            <li>Compatible con celulares, tablets y computadoras</li>
-            <li>Modo claro y oscuro automático</li>
-            <li>Servicio gratuito y sin publicidad invasiva</li>
-        </ul>
-
-        <h3>Horarios de atención</h3>
-        <p>Las farmacias de turno atienden desde las 9:00 AM del día indicado hasta las 9:00 AM del día siguiente, incluyendo fines de semana y feriados.</p>
-
-        <h3>Teléfonos útiles</h3>
-        <ul>
-            <li>Colegio de Farmacéuticos de Gral. Pueyrredon: (0223) 474-0039</li>
-            <li>Emergencias médicas: 107</li>
-        </ul>
-
-        <h3>Contacto</h3>
-        <p>Desarrollado por Pablo Bella. Para correcciones o agregar tu farmacia: pablo.s.bella@gmail.com</p>
     </div>
 </main>
 
@@ -289,7 +227,41 @@
     </div>
   </div>
 
-    <footer class="footer">
+    <section id="static-content" class="info-section">
+  <h2>Farmacias de turno en Mar del Plata</h2>
+  <p>Directorio de farmacias de turno en Mar del Plata, con dirección, teléfono y mapa interactivo. El turno se calcula a partir de la rotación del Colegio de Farmacéuticos de General Pueyrredon, que organiza las farmacias en 16 grupos. Para ver el detalle de cómo se calcula, leé <a href="como-funciona.html">cómo funcionan los turnos</a>.</p>
+
+  <h3>Todas las farmacias</h3>
+  <p>La farmacia MITRE (Colón 2690) figura en los 16 grupos, por lo que está de turno todos los días. Para el resto, consultá el <a href="farmacias.html">directorio completo de farmacias</a>, ordenado alfabéticamente, o tocá «Ver todas» en esta página.</p>
+
+  <h3>Zonas cubiertas</h3>
+  <p>Centro, Puerto, Playa Grande, Constitución, Peralta Ramos, Güemes, Colón, Juan B. Justo, Libertad, Fortunato de la Plaza, Batán, Chapadmalal, El Coyunco, Sierra de los Padres.</p>
+
+  <h3>Características del servicio</h3>
+  <ul>
+    <li>Rotación de 16 grupos farmacéuticos</li>
+    <li>Actualización automática diaria a las 9:00</li>
+    <li>Mapa interactivo con la ubicación de cada farmacia</li>
+    <li>Funciona sin conexión una vez cargada (PWA)</li>
+    <li>Compatible con celulares, tablets y computadoras</li>
+    <li>Modo claro y oscuro</li>
+    <li>Servicio gratuito</li>
+  </ul>
+
+  <h3>Horarios de atención</h3>
+  <p>Las farmacias de turno atienden desde las 9:00 del día indicado hasta las 9:00 del día siguiente, incluyendo fines de semana y feriados.</p>
+
+  <h3>Teléfonos útiles</h3>
+  <ul>
+    <li>Colegio de Farmacéuticos de Gral. Pueyrredon: (0223) 474-0039</li>
+    <li>Emergencias médicas: 107</li>
+  </ul>
+
+  <h3>Contacto</h3>
+  <p>Desarrollado por Pablo Bella. Para correcciones o para agregar tu farmacia: <a href="mailto:pablo.s.bella@gmail.com?subject=Web%20Farmacias">pablo.s.bella@gmail.com</a></p>
+</section>
+
+<footer class="footer">
     <div class="footer-grid">
       <div class="footer-brand">
         <div class="footer-brand__logo">
@@ -305,7 +277,9 @@
       </div>
 
       <div class="footer-col">
-        <span class="footer-col__title">Legal</span>
+        <span class="footer-col__title">Información</span>
+        <a href="como-funciona.html">Cómo funcionan los turnos</a>
+        <a href="farmacias.html">Directorio de farmacias</a>
         <a href="privacidad.html">Política de Privacidad</a>
         <a href="terminos.html">Términos y Condiciones</a>
         <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener noreferrer">CC BY-NC 4.0</a>
