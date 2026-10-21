@@ -1,4 +1,4 @@
-const CACHE_NAME = 'farmaturnos-v18';
+const CACHE_NAME = 'farmaturnos-v19';
 const urls = [
   '/',
   '/index.html',
@@ -32,6 +32,7 @@ const urls = [
   '/js/sw-update.js',
   '/js/analytics.js',
   '/js/legal-theme.js',
+  '/js/paginas.js',
   '/images/icon-512.png',
   '/images/icon-192.png',
   '/images/icon-128.png',

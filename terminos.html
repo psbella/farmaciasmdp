@@ -15,6 +15,17 @@
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/banner.css">
   <link rel="stylesheet" href="css/terminos.css">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Farma MDP">
+  <link rel="icon" type="image/png" sizes="96x96" href="/images/icon-96.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/images/icon-48.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/icon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/icon-16.png">
+  <link rel="apple-touch-icon" href="/images/icon-512.png">
+  <link rel="manifest" href="/manifest.json">
 </head>
 <body>
 <div class="container">
@@ -87,6 +98,39 @@
   </footer>
 </div>
 
+  <button id="btnInstalar" class="btn-instalar" style="display: none;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+      <line x1="12" y1="18" x2="12.01" y2="18"/>
+    </svg>
+    Instalar como app
+  </button>
+
+  <div id="iosModal" class="ios-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="iosModalTitle">
+    <div class="ios-modal-content">
+      <span class="ios-modal-close" id="closeIosModal" aria-label="Cerrar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </span>
+      <p id="iosModalTitle">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+          <line x1="12" y1="18" x2="12.01" y2="18"/>
+        </svg>
+        Instalá esta app en tu iPhone:
+      </p>
+      <ol>
+        <li>Tocá el ícono <strong>Compartir</strong> <span class="share-icon">⎙</span></li>
+        <li>Deslizá hacia abajo y tocá <strong>"Agregar a pantalla de inicio"</strong></li>
+        <li>Tocá <strong>"Agregar"</strong> en la esquina superior derecha</li>
+      </ol>
+      <button id="entendidoBtn" class="entendido-btn">Entendido</button>
+    </div>
+  </div>
+
 <script src="js/legal-theme.js"></script>
+<script type="module" src="js/paginas.js"></script>
 </body>
 </html>

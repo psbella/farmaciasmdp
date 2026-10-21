@@ -118,6 +118,7 @@ farmaciasmdp/
 │   ├── install.js               # Botón "Instalar como app" + modal iOS
 │   ├── escape.js                # Sanitización de HTML para datos de farmacias
 │   ├── analytics.js             # Google Analytics (gtag)
+│   ├── paginas.js               # Instalar como app + Service Worker en las páginas secundarias
 │   ├── legal-theme.js           # Tema claro/oscuro en privacidad.html / terminos.html
 │   ├── scroll-top.js            # Botón flotante "ir arriba"
 │   ├── sw-update.js             # Registro y actualización del Service Worker

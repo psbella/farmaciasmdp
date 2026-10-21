@@ -23,6 +23,7 @@ Todos los cambios notables de este proyecto se documentan acá. El formato sigue
 - Enlaces a las páginas nuevas en el footer de todas las páginas y en `sitemap.xml`.
 
 ### Changed
+- "Instalar como app" (botón, modal de iOS, `<link rel="manifest">` y registro del Service Worker) también en `como-funciona.html`, `farmacias.html`, `privacidad.html` y `terminos.html`, vía `js/paginas.js`; caché `farmaturnos-v19`.
 - `index.html`: el bloque informativo `#static-content` pasó de estar fuera de pantalla (`left: -9999px`) a ser una sección visible antes del footer.
 - `index.html`: se quitaron las dos tarjetas de farmacias precargadas; ahora `#lista` muestra «Cargando farmacias de turno…» hasta que `ui.js` la reemplaza.
 - `sw.js`: caché `farmaturnos-v18` con las páginas nuevas (sin subir la versión, los usuarios con el Service Worker instalado seguirían viendo el `index.html` anterior).
